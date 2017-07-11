@@ -34,6 +34,10 @@
 			<id>ossrh</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
 	</distributionManagement>
 
 	<developers>
@@ -217,11 +221,6 @@
 								</goals>
 							</execution>
 						</executions>
-						<configuration>
-							<executable>gpg2</executable>
-							<passphraseServerId>diribet.gpg</passphraseServerId>
-							<keyname>Diribet</keyname>
-						</configuration>
 					</plugin>
 				</plugins>
 			</build>
