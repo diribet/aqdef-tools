@@ -1,1 +1,4 @@
 language: java
+notifications:
+  email:
+    - developers@diribet.cz
