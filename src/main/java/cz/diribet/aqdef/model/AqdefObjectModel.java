@@ -1164,6 +1164,10 @@ public class AqdefObjectModel {
 			}
 		}
 
+		public E remove(String key) {
+			return remove(KKey.of(key));
+		}
+
 		public E remove(KKey key) {
 			return super.remove(key);
 		}
