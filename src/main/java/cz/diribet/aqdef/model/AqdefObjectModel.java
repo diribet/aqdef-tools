@@ -573,14 +573,14 @@ public class AqdefObjectModel {
 				while (iterator.hasNext()) {
 
 					Entry<CharacteristicIndex, CharacteristicEntries> entry = iterator.next();
-					CharacteristicIndex charactersticIndex = entry.getKey();
-					CharacteristicEntries characterstic = entry.getValue();
+					CharacteristicIndex characteristicIndex = entry.getKey();
+					CharacteristicEntries characteristic = entry.getValue();
 
-					if (!predicate.test(part, characterstic)) {
+					if (!predicate.test(part, characteristic)) {
 						iterator.remove();
 
 						// remove values for that characteristic
-						removeValueEntries(charactersticIndex);
+						removeValueEntries(characteristicIndex);
 					}
 				}
 			}
@@ -602,14 +602,57 @@ public class AqdefObjectModel {
 			while (iterator.hasNext()) {
 
 				Entry<CharacteristicIndex, CharacteristicEntries> entry = iterator.next();
-				CharacteristicIndex charactersticIndex = entry.getKey();
-				CharacteristicEntries characterstic = entry.getValue();
+				CharacteristicIndex characteristicIndex = entry.getKey();
+				CharacteristicEntries characteristic = entry.getValue();
 
-				if (!predicate.test(characterstic)) {
+				if (!predicate.test(characteristic)) {
 					iterator.remove();
 
 					// remove values for that characteristic
-					removeValueEntries(charactersticIndex);
+					removeValueEntries(characteristicIndex);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Removes all groups that do not match the given predicate.
+	 *
+	 * @param predicate
+	 */
+	public void filterGroups(GroupPredicate predicate) {
+		partEntries.forEach((partIndex, part) -> {
+			TreeMap<GroupIndex, GroupEntries> groupsOfPart = groupEntries.get(part.getIndex());
+
+			if (groupsOfPart != null) {
+				Iterator<Entry<GroupIndex, GroupEntries>> iterator = groupsOfPart.entrySet().iterator();
+				while (iterator.hasNext()) {
+					GroupEntries group = iterator.next().getValue();
+
+					if (!predicate.test(part, group)) {
+						iterator.remove();
+					}
+				}
+			}
+		});
+	}
+
+	/**
+	 * Removes all groups of the given part that do not match the given predicate.
+	 *
+	 * @param part
+	 * @param predicate
+	 */
+	public void filterGroups(PartEntries part, GroupOfSinglePartPredicate predicate) {
+		TreeMap<GroupIndex, GroupEntries> groupsOfPart = groupEntries.get(part.getIndex());
+
+		if (groupsOfPart != null) {
+			Iterator<Entry<GroupIndex, GroupEntries>> iterator = groupsOfPart.entrySet().iterator();
+			while (iterator.hasNext()) {
+				GroupEntries group = iterator.next().getValue();
+
+				if (!predicate.test(group)) {
+					iterator.remove();
 				}
 			}
 		}
@@ -972,6 +1015,16 @@ public class AqdefObjectModel {
 	@FunctionalInterface
 	public static interface CharacteristicOfSinglePartPredicate {
 		boolean test(CharacteristicEntries characteristic);
+	}
+
+	@FunctionalInterface
+	public static interface GroupPredicate {
+		boolean test(PartEntries part, GroupEntries group);
+	}
+
+	@FunctionalInterface
+	public static interface GroupOfSinglePartPredicate {
+		boolean test(GroupEntries group);
 	}
 
 	@FunctionalInterface
