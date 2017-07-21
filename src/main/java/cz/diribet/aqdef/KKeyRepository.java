@@ -214,7 +214,6 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K5007"), KKeyMetadata.of("?K5007?", String.class, 20, false));
 			keys.put(KKey.of("K5045"), KKeyMetadata.of("?K5045?", String.class, 80, false));
 			keys.put(KKey.of("K5090"), KKeyMetadata.of("?K5090?", String.class, 255, false));
-			keys.put(KKey.of("K5098"), KKeyMetadata.of("?K5098?", String.class, 254, false));
 
 			// hierarchy
 			keys.put(KKey.of("K5101"), KKeyMetadata.of("?K5101?", Integer.class, false));

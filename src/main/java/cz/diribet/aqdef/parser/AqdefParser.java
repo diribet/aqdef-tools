@@ -53,7 +53,15 @@ public class AqdefParser implements AqdefConstants {
 	private static final String[] BINARY_ATTRIBUTE_VALUE_PORTIONS = new String[] {
 		"K0020", "K0021", "??? unknown ???", "K0002", "K0004", "K0005", "K0006", "K0007", "K0008", "K0010", "K0011", "K0012"};
 
+	/**
+	 * These keys does not contain any information and we can safely ignore them.
+	 */
 	private static final String[] IGNORED_KEYS = new String[] { "K0100", "K100", "K0101", "K101" };
+
+	/**
+	 * These keys contain Q-DAS qs-STAT properietary internal configuration so we can safely ignore them.
+	 */
+	private static final String[] PROPRIETARY_QDAS_KEYS = new String[] { "K1998", "K2998", "K2999", "K5098", "K5080" };
 
 	private final KKeyRepository kKeyRepository;
 
@@ -138,7 +146,7 @@ public class AqdefParser implements AqdefConstants {
 	}
 
 	private void parseKKeyLine(String line, AqdefObjectModel aqdefObjectModel, ParserContext context) {
-		if (ignoreLine(line)) {
+		if (shouldIgnoreKKeyLine(line)) {
 			return;
 		}
 
@@ -243,13 +251,19 @@ public class AqdefParser implements AqdefConstants {
 		}
 	}
 
-	private boolean ignoreLine(String line) {
+	private boolean shouldIgnoreKKeyLine(String line) {
 		if (line.length() < 5) {
 			return true;
 		}
 
 		for (String ignoredKey : IGNORED_KEYS) {
 			if (line.startsWith(ignoredKey + " ") || line.startsWith(ignoredKey + "/")) {
+				return true;
+			}
+		}
+
+		for (String proprietaryKey : PROPRIETARY_QDAS_KEYS) {
+			if (line.startsWith(proprietaryKey)) {
 				return true;
 			}
 		}
