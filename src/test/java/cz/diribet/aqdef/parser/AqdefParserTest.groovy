@@ -14,16 +14,16 @@ import spock.lang.Specification
 
 class AqdefParserTest extends Specification {
 
-	def "spravne se parsuji klice typu String" () {
+	def "K-key entries of type String are parsed correctly" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithString)
 			PartEntries entries = model.getPartEntries(1)
 
 		then:
-			entries.getValue("K1001") == "dil"
+			entries.getValue("K1001") == "part"
 	}
 
-	def "spravne se parsuji klice typu Integer" () {
+	def "K-key entries of type Integer are parsed correctly" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithInteger)
 			PartEntries entries = model.getPartEntries(1)
@@ -32,7 +32,7 @@ class AqdefParserTest extends Specification {
 			entries.getValue("K1010") == 1i
 	}
 
-	def "spravne se parsuji klice typu Date" () {
+	def "K-key entries of type Date are parsed correctly" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithDate)
 			ValueEntries entries = model.getValueEntries(1, 1, 1)
@@ -41,29 +41,29 @@ class AqdefParserTest extends Specification {
 			entries.getValue("K0004") == Date.parse("dd.MM.yyyy HH:mm:ss", "1.1.2014 10:30:59")
 	}
 
-	def "spravne se parsuji prazdne klice" () {
+	def "empty K-key entries are parsed correctly" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithEmptyKeys)
 			PartEntries entries = model.getPartEntries(1)
 
 		then:
-			entries.getValue("K1001") == "dil"
+			entries.getValue("K1001") == "part"
 			entries.getValue("K1002") == null
 			entries.getValue("K1003") == null
 	}
 
-	def "spravne se parsuji neindexovane klice" () {
+	def "non-indexed entries are parsed correctly" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithUnindexedPart)
 			PartEntries entries = model.getPartEntries(1)
 
 		then:
 			entries != null
-			entries.getValue("K1001") == "dil"
-			entries.getValue("K1002") == "popis"
+			entries.getValue("K1001") == "part"
+			entries.getValue("K1002") == "title"
 	}
 
-	def "spravne preneseni /0 klicu na vsechny dily" () {
+	def "/0 part entries are applied to all parts" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithKeyAppliedToAllParts)
 
@@ -73,12 +73,12 @@ class AqdefParserTest extends Specification {
 			PartEntries entries0 = model.getPartEntries(0)
 
 		then:
-			entries1.getValue("K1002") == "spolecny popis"
-			entries2.getValue("K1002") == "spolecny popis"
+			entries1.getValue("K1002") == "common title"
+			entries2.getValue("K1002") == "common title"
 			entries0 == null
 	}
 
-	def "spravne preneseni /0 klicu na vsechny znaky" () {
+	def "/0 characteristic entries are applied to all characteristics" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithKeyAppliedToAllCharacteristics)
 
@@ -88,12 +88,12 @@ class AqdefParserTest extends Specification {
 			CharacteristicEntries entries0 = model.getCharacteristicEntries(1, 0)
 
 		then:
-			entries1.getValue("K2002") == "spolecny popis"
-			entries2.getValue("K2002") == "spolecny popis"
+			entries1.getValue("K2002") == "common title"
+			entries2.getValue("K2002") == "common title"
 			entries0 == null
 	}
 
-	def "spravne preneseni /0 klicu na vsechny znaky u vice dilu" () {
+	def "/0 characteristic entries are applied to all characteristics when there are multiple parts" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithKeyAppliedToAllCharacteristicsOnMultipleParts)
 
@@ -107,15 +107,15 @@ class AqdefParserTest extends Specification {
 			CharacteristicEntries part2char0 = model.getCharacteristicEntries(2, 0)
 
 		then:
-			part1char1.getValue("K2002") == "spolecny popis dil2"
-			part1char2.getValue("K2002") == "spolecny popis dil2"
-			part2char1.getValue("K2002") == "spolecny popis dil2"
-			part2char2.getValue("K2002") == "spolecny popis dil2"
+			part1char1.getValue("K2002") == "common title part2"
+			part1char2.getValue("K2002") == "common title part2"
+			part2char1.getValue("K2002") == "common title part2"
+			part2char2.getValue("K2002") == "common title part2"
 			part1char0 == null
 			part2char0 == null
 	}
 
-	def "spravne preneseni /0 klicu na vsechny znaky jendoho z vice dilu" () {
+	def "/0 characteristic entries are applied to all characteristics of single part when there are multiple parts" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithKeyAppliedToAllCharacteristicsOnOneOfMultipleParts)
 
@@ -126,13 +126,13 @@ class AqdefParserTest extends Specification {
 			CharacteristicEntries part2char2 = model.getCharacteristicEntries(2, 4)
 
 		then:
-			part1char1.getValue("K2002") == "spolecny popis"
-			part1char2.getValue("K2002") == "spolecny popis"
-			part2char1.getValue("K2002") == "spolecny popis"
-			part2char2.getValue("K2002") == "spolecny popis"
+			part1char1.getValue("K2002") == "common title"
+			part1char2.getValue("K2002") == "common title"
+			part2char1.getValue("K2002") == "common title"
+			part2char2.getValue("K2002") == "common title"
 	}
 
-	def "spravne preneseni /0 klicu na vsechny hodnoty kdyz je spolecny klic zapsany pred hodnotama" () {
+	def "/0 value entry is applied to first value set when the common entry is written before values" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithKeyAppliedToAllValuesBeforeValue)
 
@@ -142,12 +142,12 @@ class AqdefParserTest extends Specification {
 			ValueEntries entries0 = model.getValueEntries(1, 0, 0)
 
 		then:
-			entries1.getValue("K0014") == "identifikator"
+			entries1.getValue("K0014") == "identifier"
 			entries2.getValue("K0014") == null
 			entries0 == null
 	}
 
-	def "spravne preneseni /0 klicu na jednu sadu hodnot" () {
+	def "/0 value entry is applied to a single value" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithKeyAppliedToSingleValueSet)
 
@@ -157,12 +157,12 @@ class AqdefParserTest extends Specification {
 			ValueEntries entries0 = model.getValueEntries(1, 0, 0)
 
 		then:
-			entries1.getValue("K0014") == "identifikator"
+			entries1.getValue("K0014") == "identifier"
 			entries2.getValue("K0014") == null
 			entries0 == null
 	}
 
-	def "spravne preneseni /0 klicu s ruznyma hodnotama na vice sad hodnot" () {
+	def "/0 value entry is applied to multiple values" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithKeyAppliedToEachValueSet)
 
@@ -172,12 +172,12 @@ class AqdefParserTest extends Specification {
 			ValueEntries entries0 = model.getValueEntries(1, 0, 0)
 
 		then:
-			entries1.getValue("K0014") == "identifikator 1"
-			entries2.getValue("K0014") == "identifikator 2"
+			entries1.getValue("K0014") == "identifier 1"
+			entries2.getValue("K0014") == "identifier 2"
 			entries0 == null
 	}
 
-	def "spravne preneseni vice /0 klicu na vsechny hodnoty danych sad hodnot" () {
+	def "/0 value entries are applied to multiple values" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithMultipleKeysAppliedToAllValues)
 
@@ -192,24 +192,24 @@ class AqdefParserTest extends Specification {
 		then:
 			char1Value1.getValue("K0004") == Date.parse("dd.MM.yyyy HH:mm:ss", "1.1.2014 10:30:59")
 			char1Value1.getValue("K0010") == 153i
-			char1Value1.getValue("K0014") == "spolecny identifikator"
+			char1Value1.getValue("K0014") == "common identifier"
 
 			char1Value2.getValue("K0004") == Date.parse("dd.MM.yyyy HH:mm:ss", "1.1.2014 10:31:00")
 			char1Value2.getValue("K0010") == 154i
-			char1Value2.getValue("K0014") == "spolecny identifikator 2"
+			char1Value2.getValue("K0014") == "common identifier 2"
 
 			char2Value1.getValue("K0004") == Date.parse("dd.MM.yyyy HH:mm:ss", "1.1.2014 10:30:59")
 			char2Value1.getValue("K0010") == 153i
-			char2Value1.getValue("K0014") == "spolecny identifikator"
+			char2Value1.getValue("K0014") == "common identifier"
 
 			char2Value2.getValue("K0004") == Date.parse("dd.MM.yyyy HH:mm:ss", "1.1.2014 10:31:00")
 			char2Value2.getValue("K0010") == 154i
-			char2Value2.getValue("K0014") == "spolecny identifikator 2"
+			char2Value2.getValue("K0014") == "common identifier 2"
 
 			entries0 == null
 	}
 
-	def "/0 klice neprepisuji explicitne definovane klice" () {
+	def "/0 entries don't overwrites explicitly defined entries" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithKeyAppliedToAllPartsSomeDefinedExplicitly)
 
@@ -217,11 +217,11 @@ class AqdefParserTest extends Specification {
 			PartEntries entries2 = model.getPartEntries(2)
 
 		then:
-			entries1.getValue("K1002") == "explicitne definovany popis"
-			entries2.getValue("K1002") == "spolecny popis"
+			entries1.getValue("K1002") == "explicit title"
+			entries2.getValue("K1002") == "common title"
 	}
 
-	def "spravne se parsuji hodnoty v binarnim formatu, ktere jsou na konci soubru" () {
+	def "values in binary format are parsed correctly - values are at the end" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithTwoPartsWithBinaryValuesAtTheEnd)
 
@@ -233,7 +233,7 @@ class AqdefParserTest extends Specification {
 			values2.size() == 2
 	}
 
-	def "spravne se parsuji hodnoty v binarnim formatu, ktere jsou za kazdym dilem" () {
+	def "values in binary format are parsed correctly - values are after each part" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithTwoPartsWithBinaryValuesAfterEachPart)
 
@@ -245,7 +245,7 @@ class AqdefParserTest extends Specification {
 			values2.size() == 0
 	}
 
-	def "spravne se parsuji hodnoty v k-klic formatu, ktere jsou na konci soubru" () {
+	def "values in K-key format are parsed correctly - values are at the end" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithTwoPartsWithBinaryValuesAtTheEnd)
 
@@ -257,7 +257,7 @@ class AqdefParserTest extends Specification {
 			values2.size() == 2
 	}
 
-	def "spravne se parsuji hodnoty v k-klic formatu, ktere jsou za kazdym dilem" () {
+	def "values in K-key format are parsed correctly - values are after each part" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithTwoPartsWithValuesAfterEachPart)
 
@@ -269,7 +269,7 @@ class AqdefParserTest extends Specification {
 			values2.size() == 2
 	}
 
-	def "pokud jsou v souboru hodnoty pro neexistujici znaky, tak parser vyhodi exception" () {
+	def "error is thrown when there are values for non-existing characteristic" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithMoreValuesThanCharacteristics)
 
@@ -277,7 +277,7 @@ class AqdefParserTest extends Specification {
 			thrown(Exception)
 	}
 
-	def "po normalizaci object modelu neexistuji /0 klice" () {
+	def "there are no /0 entries after aqdef object model normalization" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithKeyAppliedToAllPartsCharacteristicsAndValues)
 
@@ -291,7 +291,7 @@ class AqdefParserTest extends Specification {
 			values == null
 	}
 
-	def "spravne se parsuje hierarchie" () {
+	def "hierarchy si parsed correctly" () {
 		when:
 			AqdefObjectModel model = parse(dfqWithHierarchy)
 
@@ -336,7 +336,7 @@ class AqdefParserTest extends Specification {
 
 	def dfqWithString = """
 		K0100 1
-		K1001/1 dil
+		K1001/1 part
 	"""
 
 	def dfqWithInteger = """
@@ -346,155 +346,154 @@ class AqdefParserTest extends Specification {
 
 	def dfqWithDate = """
 		K0100 1
-		K1001/1 dil
-		K2001/1 znak
+		K1001/1 part
+		K2001/1 characteristic
 		K0001/1 1
 		K0004/1 1.1.2014/10:30:59
 	"""
 
 	def dfqWithEmptyKeys = """
 		K0100 1
-		K1001/1 dil
+		K1001/1 part
 		K1002
 		K1003/1
 	"""
 
 	def dfqWithUnindexedPart = """
 		K0100 1
-		K1001 dil
-		K1002 popis
+		K1001 part
+		K1002 title
 	"""
 
 	def dfqWithKeyAppliedToAllParts = """
 		K0100 2
-		K1002/0 spolecny popis
-		K1001/1 dil1
-		K1001/2 dil2
+		K1002/0 common title
+		K1001/1 part1
+		K1001/2 part2
 	"""
 
 	def dfqWithKeyAppliedToAllCharacteristics = """
 		K0100 2
-		K1001/1 dil
-		K2002/0 spolecny popis
-		K2001/1 znak1
-		K2001/2 znak2
+		K1001/1 part
+		K2002/0 common title
+		K2001/1 characteristic1
+		K2001/2 characteristic2
 	"""
 
 	def dfqWithKeyAppliedToAllCharacteristicsOnMultipleParts = """
 		K0100 4
-		K1001/1 dil1
-		K2002/0 spolecny popis dil1
-		K2001/1 dil1 - znak1
-		K2001/2 dil1 - znak2
+		K1001/1 part1
+		K2002/0 common title part1
+		K2001/1 part1 - characteristic1
+		K2001/2 part1 - characteristic2
 
-		K1001/2 dil2
-		K2002/0 spolecny popis dil2
-		K2001/3 dil2 - znak1
-		K2001/4 dil2 - znak2
+		K1001/2 part2
+		K2002/0 common title part2
+		K2001/3 part2 - characteristic1
+		K2001/4 part2 - characteristic2
 	"""
 
 	def dfqWithKeyAppliedToAllCharacteristicsOnOneOfMultipleParts = """
 		K0100 4
-		K1001/1 dil1
-		K2002/0 spolecny popis
-		K2001/1 dil1 - znak1
-		K2001/2 dil1 - znak2
+		K1001/1 part1
+		K2002/0 common title
+		K2001/1 part1 - characteristic1
+		K2001/2 part1 - characteristic2
 
-		K1001/2 dil2
-		K2001/3 dil2 - znak1
-		K2001/4 dil2 - znak2
+		K1001/2 part2
+		K2001/3 part2 - characteristic1
+		K2001/4 part2 - characteristic2
 	"""
 
 	/**
-	 * Takto podle qs-statu nelze zapisovat spolecne klice pro hodnoty - klic musi byt za kazdou sadou hodnot.
-	 * To je ale podle me spatne chovani - u nas se to da takto zapsat. K0014 se pak aplikuje na prvni sadu hodnot.
+	 * This behavior is not supported by qs-STAT but we can read such AQDEF.
 	 */
 	def dfqWithKeyAppliedToAllValuesBeforeValue = """
 		K0100 1
-		K1001/1 dil
-		K2001/1 znak1
-		K0014/0 identifikator
+		K1001/1 part
+		K2001/1 characteristic1
+		K0014/0 identifier
 		K0001/1 1
 		K0001/1 2
 	"""
 
 	def dfqWithKeyAppliedToSingleValueSet = """
 		K0100 1
-		K1001/1 dil
-		K2001/1 znak1
+		K1001/1 part
+		K2001/1 characteristic1
 		K0001/1 1
-		K0014/0 identifikator
+		K0014/0 identifier
 		K0001/1 2
 	"""
 
 	def dfqWithKeyAppliedToEachValueSet = """
 		K0100 1
-		K1001/1 dil
-		K2001/1 znak1
+		K1001/1 part
+		K2001/1 characteristic1
 		K0001/1 1
-		K0014/0 identifikator 1
+		K0014/0 identifier 1
 		K0001/1 2
-		K0014/0 identifikator 2
+		K0014/0 identifier 2
 	"""
 
 	def dfqWithMultipleKeysAppliedToAllValues = """
 		K0100 2
-		K1001/1 dil
-		K2001/1 znak1
-		K2001/2 znak2
+		K1001/1 part
+		K2001/1 characteristic1
+		K2001/2 characteristic2
 		K0001/1 1
 		K0001/2 3
 		K0004/0 1.1.2014/10:30:59
 		K0010/0 153
-		K0014/0 spolecny identifikator
+		K0014/0 common identifier
 		K0001/1 2
 		K0001/2 4
 		K0004/0 1.1.2014/10:31:00
 		K0010/0 154
-		K0014/0 spolecny identifikator 2
+		K0014/0 common identifier 2
 	"""
 
 	def dfqWithKeyAppliedToAllPartsSomeDefinedExplicitly = """
 		K0100 2
-		K1002/0 spolecny popis
-		K1001/1 dil1
-		K1002/1 explicitne definovany popis
-		K1001/2 dil2
+		K1002/0 common title
+		K1001/1 part1
+		K1002/1 explicit title
+		K1001/2 part2
 	"""
 
 	def dfqWithTwoPartsWithBinaryValuesAtTheEnd = """
 		K0100 2
-		K1001/1 dil1
-		K2001/1 znak1
+		K1001/1 part1
+		K2001/1 characteristic1
 		K2004/0 0
-		K1001/2 dil2
-		K2001/2 znak2
+		K1001/2 part2
+		K2001/2 characteristic2
 		1001.01.2014/00:00:002001.01.2014/00:00:00
 		1.1001.01.2014/00:00:002.1001.01.2014/00:00:00
 	"""
 
 	/**
-	 * Obe hodnoty patri k znaku/dilu 1
-	 * (nezavisi na tom za kterym dilem jsou hodnoty zapsane - pro indexaci hodnot se vzdy berou v potaz vsechny znaky)
+	 * Both values are for characteristic1 of part1.
+	 * (value sets could be written after each part but all characteristics are always considered when assigning values to characteristics)
 	 */
 	def dfqWithTwoPartsWithBinaryValuesAfterEachPart = """
 		K0100 2
-		K1001/1 dil1
-		K2001/1 znak1
+		K1001/1 part1
+		K2001/1 characteristic1
 		K2004/0 0
 		1001.01.2014/00:00:00
-		K1001/2 dil2
-		K2001/2 znak2
+		K1001/2 part2
+		K2001/2 characteristic2
 		2001.01.2014/00:00:00
 	"""
 
 	def dfqWithTwoPartsWithValuesAtTheEnd = """
 		K0100 2
-		K1001/1 dil1
-		K2001/1 znak1
+		K1001/1 part1
+		K2001/1 characteristic1
 		K2004/0 0
-		K1001/2 dil2
-		K2001/2 znak2
+		K1001/2 part2
+		K2001/2 characteristic2
 		K0001/1 1
 		K0001/1 1.1
 		K0001/2 2
@@ -503,47 +502,47 @@ class AqdefParserTest extends Specification {
 
 	def dfqWithTwoPartsWithValuesAfterEachPart = """
 		K0100 2
-		K1001/1 dil1
-		K2001/1 znak1
+		K1001/1 part1
+		K2001/1 characteristic1
 		K2004/0 0
 		K0001/1 1
 		K0001/1 1.1
-		K1001/2 dil2
-		K2001/2 znak2
+		K1001/2 part2
+		K2001/2 characteristic2
 		K0001/2 2
 		K0001/2 2.1
 	"""
 
 	/**
-	 * Hodnoty jsou pro 3 znaky, ale definovane jsou jen 2
+	 * Values are for 3 characteristics, but only 2 are defined
 	 */
 	def dfqWithMoreValuesThanCharacteristics = """
 		K0100 2
-		K1001/1 dil1
-		K2001/1 znak1
-		K2001/2 znak2
+		K1001/1 part1
+		K2001/1 characteristic1
+		K2001/2 characteristic2
 		1001.01.2014/00:00:002001.01.2014/00:00:003001.01.2014/00:00:00
 	"""
 
 	def dfqWithKeyAppliedToAllPartsCharacteristicsAndValues = """
 		K0100 2
-		K1001/0 spolecny popis
-		K1001/1 dil
-		K2002/0 spolecny popis
-		K2001/1 znak
-		K0014/0 spolecny identifikator
+		K1001/0 common title
+		K1001/1 part
+		K2002/0 common title
+		K2001/1 characteristic
+		K0014/0 common identifier
 		K0001/1 1
 	"""
 
 	def dfqWithHierarchy = """
 		K0100 2
-		K1001/1 dil
-		K2001/1 znak 1
-		K2001/2 znak 2
-		K2001/3 znak 3
-		K2001/4 znak 4
-		K2001/5 znak 5
-		K2001/6 znak 6
+		K1001/1 part
+		K2001/1 characteristic 1
+		K2001/2 characteristic 2
+		K2001/3 characteristic 3
+		K2001/4 characteristic 4
+		K2001/5 characteristic 5
+		K2001/6 characteristic 6
 		K5001/1 group 1
 		K5001/1 group 1
 		K5111/1 1
@@ -565,11 +564,11 @@ class AqdefParserTest extends Specification {
 
 	def dfqWithEmptySimpleAndNormalHierarchy = """
 		K0100 2
-		K1001/1 dil
-		K2001/1 znak 1
+		K1001/1 part
+		K2001/1 characteristic 1
 		K2030/1 0
 		K2031/1 0
-		K2001/2 znak 2
+		K2001/2 characteristic 2
 		K2030/2 0
 		K2031/2 0
 		K5111/1 1
@@ -581,11 +580,11 @@ class AqdefParserTest extends Specification {
 
 	def dfqWithSimpleAndNormalHierarchy = """
 		K0100 2
-		K1001/1 dil
-		K2001/1 znak 1
+		K1001/1 part
+		K2001/1 characteristic 1
 		K2030/1 1
 		K2031/1 0
-		K2001/2 znak 2
+		K2001/2 characteristic 2
 		K2030/2 0
 		K2031/2 1
 		K5111/1 1
