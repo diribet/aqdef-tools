@@ -307,6 +307,27 @@ class AqdefParserTest extends Specification {
 			groupBindings.size() == 2
 	}
 
+	def "hierarchy could be parsed even when there are both empty simple hierarchy and normal hierarchy" () {
+		when:
+			AqdefObjectModel model = parse(dfqWithEmptySimpleAndNormalHierarchy)
+
+			def nodeDefinitions = model.hierarchy.nodeDefinitions
+			def partBindings = model.hierarchy.nodeBindings.get(NodeIndex.of(1))
+
+		then:
+			nodeDefinitions.size() == 3
+			partBindings.size() == 2
+			model.hierarchy.nodeBindings.size() == 1
+	}
+
+	def "hierarchy could not be parsed when there are both simple and normal hierarchy (both non-empty)" () {
+		when:
+			AqdefObjectModel model = parse(dfqWithSimpleAndNormalHierarchy)
+
+		then:
+			thrown(RuntimeException)
+	}
+
 
 	def parse(String dfq) {
 		def parser = new AqdefParser()
@@ -540,5 +561,37 @@ class AqdefParserTest extends Specification {
 		K5103/1 8
 		K5102/8 5
 		K5102/8 6
+	"""
+
+	def dfqWithEmptySimpleAndNormalHierarchy = """
+		K0100 2
+		K1001/1 dil
+		K2001/1 znak 1
+		K2030/1 0
+		K2031/1 0
+		K2001/2 znak 2
+		K2030/2 0
+		K2031/2 0
+		K5111/1 1
+		K5112/2 1
+		K5112/3 2
+		K5102/1 1
+		K5102/1 2
+	"""
+
+	def dfqWithSimpleAndNormalHierarchy = """
+		K0100 2
+		K1001/1 dil
+		K2001/1 znak 1
+		K2030/1 1
+		K2031/1 0
+		K2001/2 znak 2
+		K2030/2 0
+		K2031/2 1
+		K5111/1 1
+		K5112/2 1
+		K5112/3 2
+		K5102/1 1
+		K5102/1 2
 	"""
 }

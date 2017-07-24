@@ -95,6 +95,17 @@ public class AqdefHierarchy {
 	}
 
 	private void putSimpleHierarchyEntry(KKey kKey, Integer index, Object value) {
+		if (value == null) {
+			return;
+		}
+
+		int valueInt = (int) value;
+
+		// simple hierarchy entry with value 0 has no information - it's the same as if there is no record
+		if (valueInt == 0) {
+			return;
+		}
+
 		if (containsHierarchyInformation) {
 			throw new RuntimeException("Combination of hierarchy (K51xx) and simple hierarchy (K2030/2031) is not supported.");
 		}
