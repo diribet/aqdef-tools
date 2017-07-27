@@ -1,9 +1,7 @@
-/**
- *
- */
 package cz.diribet.aqdef.writer;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.util.Comparator;
 import java.util.Objects;
@@ -28,14 +26,18 @@ import cz.diribet.aqdef.model.AqdefObjectModel.ValueEntries;
 import cz.diribet.aqdef.model.AqdefObjectModel.ValueEntry;
 
 /**
- * Writes {@link AqdefObjectModel} to DFQ files. <br>
- * You can call {@link #writeTo(Writer)} to write DFQ content to a given writer or {@link #getData()} to get DFQ content as a String.
- * DFQ content is created lazily when one of these methods is called.
+ * Writes {@link AqdefObjectModel} to AQDFQ text structure.
+ * <p>
+ * You can call {@link #writeTo(Writer)} to write DFQ content to a given writer
+ * or {@link #getData()} to get DFQ content as a String. DFQ content is created
+ * lazily when one of these methods is called.
+ * </p>
  *
  * @author Vlastimil Dolejs
  *
  */
 public class AqdefWriter implements AqdefConstants {
+	
 	//*******************************************
 	// Attributes
 	//*******************************************
@@ -55,10 +57,11 @@ public class AqdefWriter implements AqdefConstants {
 	//*******************************************
 
 	/**
-	 * Creates AQDFQ content and returns it as a String
+	 * Creates AQDFQ structure and returns it as a String
 	 *
 	 * @param aqdefObjectModel
-	 * @return
+	 *            model to be written, must not be {@code null}
+	 * @return AQDFQ content as a String, never {@code null}
 	 */
 	public String writeToString(AqdefObjectModel aqdefObjectModel) {
 		Objects.requireNonNull(aqdefObjectModel);
@@ -67,19 +70,23 @@ public class AqdefWriter implements AqdefConstants {
 
 		try {
 			writeTo(aqdefObjectModel, fileContent);
+			
 		} catch (IOException e) {
-			throw new RuntimeException("Failed to write DFQ file data.", e);
+			throw new RuntimeException("Failed to write AQDFQ model content", e);
 		}
 
 		return fileContent.toString();
 	}
 
 	/**
-	 * Creates AQDEF content and writes it to a given <code>writer</code>
+	 * Creates AQDEF structure and writes it to a given <code>writer</code>
 	 *
 	 * @param aqdefObjectModel
+	 *            model to be written, must not be {@code null}
 	 * @param writer
+	 *            writer to write model to, must not be {@code null}
 	 * @throws IOException
+	 *             thrown when some I/O error occur
 	 */
 	public void writeTo(AqdefObjectModel aqdefObjectModel, Writer writer) throws IOException {
 		Objects.requireNonNull(aqdefObjectModel);
@@ -92,7 +99,7 @@ public class AqdefWriter implements AqdefConstants {
 		aqdefObjectModel.normalize();
 
 		try {
-			// DFQ file starts with the total number of characteristics
+			// AQDEF structure always starts with the total number of characteristics
 			write("K0100", null, Integer.toString(aqdefObjectModel.getCharacteristicCount()), writer);
 
 			aqdefObjectModel.forEachPart(part -> {
@@ -119,74 +126,72 @@ public class AqdefWriter implements AqdefConstants {
 				write(nodeBinding, writer);
 			});
 
-		} catch (WrappedIOException e) {
+		} catch (UncheckedIOException e) {
 			throw e.getCause();
 		}
 	}
 
-	private void write(PartEntries part, Writer writer) throws WrappedIOException {
+	private void write(PartEntries part, Writer writer) throws UncheckedIOException {
 		part.values()
-				.stream()
-				.sorted(Comparator.comparing(PartEntry::getKey))
-				.forEach(partEntry -> write(partEntry, writer));
+			.stream()
+			.sorted(Comparator.comparing(PartEntry::getKey))
+			.forEach(partEntry -> write(partEntry, writer));
 	}
 
-	private void write(PartEntry entry, Writer writer) throws WrappedIOException {
+	private void write(PartEntry entry, Writer writer) throws UncheckedIOException {
 		KKey kKey = entry.getKey();
 
 		write(kKey.getKey(), entry.getIndex().getIndex(), convertValueOfKKey(kKey, entry.getValue()), writer);
 	}
 
-	private void write(CharacteristicEntries characteristic, Writer writer) throws WrappedIOException {
+	private void write(CharacteristicEntries characteristic, Writer writer) throws UncheckedIOException {
 		characteristic.values()
-							.stream()
-							.sorted(Comparator.comparing(CharacteristicEntry::getKey))
-							.forEach(characteristicEntry -> write(characteristicEntry, writer));
+					  .stream()
+					  .sorted(Comparator.comparing(CharacteristicEntry::getKey))
+					  .forEach(characteristicEntry -> write(characteristicEntry, writer));
 	}
 
-	private void write(CharacteristicEntry entry, Writer writer) throws WrappedIOException {
+	private void write(CharacteristicEntry entry, Writer writer) throws UncheckedIOException {
 		KKey kKey = entry.getKey();
 
 		write(kKey.getKey(), entry.getIndex().getCharacteristicIndex(), convertValueOfKKey(kKey, entry.getValue()), writer);
 	}
 
-	private void write(GroupEntries group, Writer writer) throws WrappedIOException {
+	private void write(GroupEntries group, Writer writer) throws UncheckedIOException {
 		group.values()
-					.stream()
-					.sorted(Comparator.comparing(GroupEntry::getKey))
-					.forEach(characteristicEntry -> write(characteristicEntry, writer));
+			 .stream()
+			 .sorted(Comparator.comparing(GroupEntry::getKey))
+			 .forEach(characteristicEntry -> write(characteristicEntry, writer));
 	}
 
-	private void write(GroupEntry entry, Writer writer) throws WrappedIOException {
+	private void write(GroupEntry entry, Writer writer) throws UncheckedIOException {
 		KKey kKey = entry.getKey();
 
 		write(kKey.getKey(), entry.getIndex().getGroupIndex(), convertValueOfKKey(kKey, entry.getValue()), writer);
 	}
 
-	private void write(ValueEntries value, Writer writer) throws WrappedIOException {
+	private void write(ValueEntries value, Writer writer) throws UncheckedIOException {
 		value.values()
-				.stream()
-				.sorted(Comparator.comparing(ValueEntry::getKey))
-				.forEach(valueEntry -> write(valueEntry, writer));
+			 .stream()
+			 .sorted(Comparator.comparing(ValueEntry::getKey))
+			 .forEach(valueEntry -> write(valueEntry, writer));
 	}
 
-	private void write(ValueEntry entry, Writer writer) throws WrappedIOException {
+	private void write(ValueEntry entry, Writer writer) throws UncheckedIOException {
 		KKey kKey = entry.getKey();
-
-		write(
-			kKey.getKey(),
-			entry.getIndex().getCharacteristicIndex().getCharacteristicIndex(),
-			convertValueOfKKey(kKey, entry.getValue()),
-			writer);
+		Integer characteristicIndex = entry.getIndex().getCharacteristicIndex().getCharacteristicIndex();
+		String value = convertValueOfKKey(kKey, entry.getValue());
+		
+		write(kKey.getKey(), characteristicIndex, value, writer);
 	}
 
-	private void write(HierarchyEntry entry, Writer writer) throws WrappedIOException {
+	private void write(HierarchyEntry entry, Writer writer) throws UncheckedIOException {
 		KKey kKey = entry.getKey();
 
 		write(kKey.getKey(), entry.getIndex().getIndex(), convertValueOfKKey(kKey, entry.getValue()), writer);
 	}
 
-	private void write(String key, Integer index, String value, Writer writer) throws WrappedIOException {
+	private void write(String key, Integer index, String value, Writer writer) throws UncheckedIOException {
 		try {
 			writer.write(key);
 
@@ -198,22 +203,26 @@ public class AqdefWriter implements AqdefConstants {
 			writer.write(VALUES_SEPARATOR);
 			writer.write(StringUtils.defaultString(value, StringUtils.EMPTY));
 			writer.write(LINE_SEPARATOR);
+			
 		} catch (IOException e) {
-			throw new WrappedIOException(e);
+			throw new UncheckedIOException(e);
 		}
 	}
 
 	private String convertValueOfKKey(KKey kKey, Object value) {
 		String result;
+		
 		try {
 			result = getKKeyValueConverter(kKey).toString(value);
+			
 		} catch (Throwable e) {
-			throw new RuntimeException("Failed to convert value (" + Objects.toString(value) + ") of k-key " + kKey + " to string.", e);
+			throw new RuntimeException("Failed to convert value (" + Objects.toString(value) + ") of k-key " + kKey + " to string", e);
 		}
 
 		if (result != null) {
 			result = result.trim();
 		}
+		
 		return result;
 	}
 
@@ -223,24 +232,10 @@ public class AqdefWriter implements AqdefConstants {
 
 		if (kKeyMetadata == null) {
 			throw new IllegalArgumentException("Can't find converter for unknown k-key " + kKey);
+			
 		} else {
 			return (IKKeyValueConverter<Object>) kKeyMetadata.getConverter();
 		}
 	}
 
-	//*******************************************
-	// Inner classes
-	//*******************************************
-
-	private static class WrappedIOException extends RuntimeException {
-
-		public WrappedIOException(IOException cause) {
-			super(cause);
-		}
-
-		@Override
-		public synchronized IOException getCause() {
-			return (IOException) super.getCause();
-		}
-	}
 }
