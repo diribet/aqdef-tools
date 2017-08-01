@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -79,21 +80,14 @@ public class AqdefHierarchy {
 
 		if (kKey.isSimpleHierarchyLevel()) {
 			putSimpleHierarchyEntry(kKey, index, value);
-			return;
-		}
-
-		NodeIndex nodeIndex = NodeIndex.of(index);
-
-		HierarchyEntry hierarchyEntry;
-		if (isNodeDefinition(kKey) || isBinding(kKey)) {
-
-			hierarchyEntry = new HierarchyEntry(kKey, nodeIndex, (Integer) value);
-
+			
+		} else if (isNodeDefinition(kKey) || isBinding(kKey)) {
+			NodeIndex nodeIndex = NodeIndex.of(index);
+			putEntry(new HierarchyEntry(kKey, nodeIndex, (Integer) value));
+			
 		} else {
 			throw new IllegalArgumentException("Unknown hierarchy entry. Key: " + kKey + " Value: " + Objects.toString(value));
 		}
-
-		putEntry(hierarchyEntry);
 	}
 
 	public void putEntry(HierarchyEntry entry) {
@@ -263,9 +257,10 @@ public class AqdefHierarchy {
 			// bind all orphan characteristics to the root part node
 			aqdefObjectModel.forEachCharacteristic(part, characteristic -> {
 				CharacteristicIndex characteristicIndex = characteristic.getIndex();
+				Integer characteristicIndexInt = characteristicIndex.getCharacteristicIndex();
 				
-				if (getNodeIndexOfCharacteristic(characteristicIndex).isPresent() ||
-					getParentNodeIndexOfCharacteristic(characteristicIndex).isPresent()) {
+				if (getNodeIndexOfCharacteristic(characteristicIndexInt).isPresent() ||
+					getParentNodeIndexOfCharacteristic(characteristicIndexInt).isPresent()) {
 					
 					return;
 				}
@@ -290,7 +285,8 @@ public class AqdefHierarchy {
 	}
 
 	public boolean hasChildren(CharacteristicIndex characteristicIndex) {
-		Optional<NodeIndex> nodeIndexOfCharacteristic = getNodeIndexOfCharacteristic(characteristicIndex);
+		Integer characteristicIndexInt = characteristicIndex == null ? null : characteristicIndex.getCharacteristicIndex();
+		Optional<NodeIndex> nodeIndexOfCharacteristic = getNodeIndexOfCharacteristic(characteristicIndexInt);
 
 		if (nodeIndexOfCharacteristic.isPresent()) {
 			List<HierarchyEntry> children = nodeBindings.get(nodeIndexOfCharacteristic.get());
@@ -308,13 +304,15 @@ public class AqdefHierarchy {
 	 *         characteristic do not have a parent
 	 */
 	public Optional<Object> getParentIndex(CharacteristicIndex characteristicIndex) {
-		Optional<NodeIndex> parentNodeIndexOfCharacteristic = getParentNodeIndexOfCharacteristic(characteristicIndex);
+		Integer characteristicIndexInt = characteristicIndex == null ? null : characteristicIndex.getCharacteristicIndex();
+		Optional<NodeIndex> parentNodeIndexOfCharacteristic = getParentNodeIndexOfCharacteristic(characteristicIndexInt);
 
 		if (parentNodeIndexOfCharacteristic.isPresent()) {
 			// characteristic is directly assigned to parent
 			return getCharacteristicOrGroupIndexOfNode(parentNodeIndexOfCharacteristic.get(), characteristicIndex.getPartIndex());
+			
 		} else {
-			Optional<NodeIndex> nodeIndexOfCharacteristic = getNodeIndexOfCharacteristic(characteristicIndex);
+			Optional<NodeIndex> nodeIndexOfCharacteristic = getNodeIndexOfCharacteristic(characteristicIndexInt);
 
 			if (nodeIndexOfCharacteristic.isPresent()) {
 				// characteristic is defined as node that may be assigned to parent node
@@ -324,7 +322,6 @@ public class AqdefHierarchy {
 					return getCharacteristicOrGroupIndexOfNode(parentNodeIndex.get(), characteristicIndex.getPartIndex());
 				}
 			}
-
 		}
 
 		return Optional.empty();
@@ -338,7 +335,8 @@ public class AqdefHierarchy {
 	 *         of parent, or empty optional if given group do not have a parent
 	 */
 	public Optional<Object> getParentIndex(GroupIndex groupIndex) {
-		Optional<NodeIndex> nodeIndexOfGroup = getNodeIndexOfGroup(groupIndex);
+		Integer groupIndexInt = groupIndex == null ? null : groupIndex.getGroupIndex();
+		Optional<NodeIndex> nodeIndexOfGroup = getNodeIndexOfGroup(groupIndexInt);
 
 		if (nodeIndexOfGroup.isPresent()) {
 			Optional<NodeIndex> parentNodeIndex = getParentNodeIndexOfNode(nodeIndexOfGroup.get());
@@ -374,61 +372,59 @@ public class AqdefHierarchy {
 	}
 
 	private Optional<NodeIndex> getParentNodeIndexOfNode(NodeIndex nodeIndex) {
-		return nodeBindings.values()
-								.stream()
-								.flatMap(list -> list.stream())
-								.filter(hierarchyEntry -> {
-									return hierarchyEntry.getKey().equals(KEY_NODE_BINDING)
-											&& nodeIndex.getIndex().equals(hierarchyEntry.getValue());
-								})
-								.map(hierarchyEntry -> hierarchyEntry.getIndex())
-								.findAny();
+		return nodeBindings.values().stream()
+									.flatMap(list -> list.stream())
+									.filter(hierarchyEntry -> {
+										return hierarchyEntry.getKey().equals(KEY_NODE_BINDING)
+												&& nodeIndex.getIndex().equals(hierarchyEntry.getValue());
+									})
+									.map(HierarchyEntry::getIndex)
+									.findAny();
 	}
 
-	private Optional<NodeIndex> getParentNodeIndexOfCharacteristic(CharacteristicIndex characteristicIndex) {
-		return nodeBindings.values()
-								.stream()
-								.flatMap(list -> list.stream())
-								.filter(hierarchyEntry -> {
-									return hierarchyEntry.getKey().equals(KEY_CHARACTERISTIC_BINDING)
-											&& characteristicIndex.getCharacteristicIndex().equals(hierarchyEntry.getValue());
-								})
-								.map(hierarchyEntry -> hierarchyEntry.getIndex())
-								.findAny();
+	private Optional<NodeIndex> getParentNodeIndexOfCharacteristic(Integer characteristicIndex) {
+		if (characteristicIndex == null) {
+			return Optional.empty();
+		}
+		
+		return nodeBindings.values().stream()
+									.flatMap(list -> list.stream())
+									.filter(hierarchyEntry -> {
+										return hierarchyEntry.getKey().equals(KEY_CHARACTERISTIC_BINDING)
+												&& characteristicIndex.equals(hierarchyEntry.getValue());
+									})
+									.map(HierarchyEntry::getIndex)
+									.findAny();
 	}
 
-	private Optional<NodeIndex> getNodeIndexOfGroup(GroupIndex groupIndex) {
-		requireNonNull(groupIndex);
-		requireNonNull(groupIndex.getGroupIndex());
+	private Optional<NodeIndex> getNodeIndexOfGroup(Integer groupIndex) {
+		if (groupIndex == null) {
+			return Optional.empty();
+		}
 
-		Integer groupIndexInt = groupIndex.getGroupIndex();
-
-		return nodeDefinitions.entrySet()
-										.stream()
-										.filter(entry -> {
-											HierarchyEntry hierarchyEntry = entry.getValue();
-											return KEY_GROUP_NODE.equals(hierarchyEntry.getKey())
-													&& groupIndexInt.equals(hierarchyEntry.getValue());
-										})
-										.map(entry -> entry.getKey())
-										.findAny();
+		return nodeDefinitions.entrySet().stream()
+										 .filter(entry -> {
+											 HierarchyEntry hierarchyEntry = entry.getValue();
+											 return KEY_GROUP_NODE.equals(hierarchyEntry.getKey())
+													 && groupIndex.equals(hierarchyEntry.getValue());
+										 })
+										 .map(Entry::getKey)
+										 .findAny();
 	}
 
-	private Optional<NodeIndex> getNodeIndexOfCharacteristic(CharacteristicIndex characteristicIndex) {
-		requireNonNull(characteristicIndex);
-		requireNonNull(characteristicIndex.getCharacteristicIndex());
+	private Optional<NodeIndex> getNodeIndexOfCharacteristic(Integer characteristicIndex) {
+		if (characteristicIndex == null) {
+			return Optional.empty();
+		}
 
-		Integer characteristicIndexInt = characteristicIndex.getCharacteristicIndex();
-
-		return nodeDefinitions.entrySet()
-										.stream()
-										.filter(entry -> {
-											HierarchyEntry hierarchyEntry = entry.getValue();
-											return KEY_CHARACTERISTIC_NODE.equals(hierarchyEntry.getKey())
-													&& characteristicIndexInt.equals(hierarchyEntry.getValue());
-										})
-										.map(entry -> entry.getKey())
-										.findAny();
+		return nodeDefinitions.entrySet().stream()
+										 .filter(entry -> {
+											 HierarchyEntry hierarchyEntry = entry.getValue();
+											 return KEY_CHARACTERISTIC_NODE.equals(hierarchyEntry.getKey())
+													 && characteristicIndex.equals(hierarchyEntry.getValue());
+										 })
+										 .map(Entry::getKey)
+										 .findAny();
 	}
 
 	@Override
