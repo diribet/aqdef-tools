@@ -3,10 +3,13 @@ package cz.diribet.aqdef.model;
 import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -16,20 +19,37 @@ import cz.diribet.aqdef.model.AqdefObjectModel.AbstractEntry;
 
 /**
  * Contains information about hierarchy of <i>parts / characteristics /
- * groups</i>.
+ * groups</i>. There are two types of hiearchy definition within the AQDEF
+ * structure:
+ * <ul>
+ * <li>reagular hiearchy stored in {@code K51xx} keys</li>
+ * <li>simplified characteristics hierarchy stored in {@code K2030/K2031}
+ * keys</li>
+ * </ul>
+ * Hierarchy model can be created only from one hierarchy type. Creating model
+ * from both types together is <strong>NOT</strong> supported.
  * <p>
- * This information if contained in {@code K51xx} keys. The simplified
- * characteristics hierarchy from {@code K2030/K2031} keys is also supported,
- * but is internally transformed to the {@code K51xx} structure.
- * </p>
+ * <strong>The simplified characteristics hierarchy</strong>
  * <p>
- * Note that both hierarchy types together are NOT supported.
+ * The simplified characteristics hierarchy from {@code K2030/K2031} keys is
+ * internally transformed to the {@code K51xx} structure. In other words, there
+ * is no way to get information about simple hierarchy back from the hierarchy
+ * model.
+ * <p>
+ * Note that hierarchy model created from a simplified characteristics hierarchy
+ * needs to be {@link #normalize(AqdefObjectModel) normalized}, because
+ * there could be characteristics without binding to a root part node, or there
+ * could be no root part node at all.
  * </p>
  *
  * @author Vlastimil Dolejs
+ * @author Honza Krakora
+ * 
+ * @see #normalize(AqdefObjectModel)
  *
  */
 public class AqdefHierarchy {
+	
 	//*******************************************
 	// Attributes
 	//*******************************************
@@ -47,8 +67,8 @@ public class AqdefHierarchy {
 	private TreeMap<NodeIndex, HierarchyEntry> nodeDefinitions = new TreeMap<>();
 	private TreeMap<NodeIndex, List<HierarchyEntry>> nodeBindings = new TreeMap<>();
 
-	private boolean containsHierarchyInformation;
-	private boolean containsSimpleHierarchyInformation;
+	private boolean containsHierarchyInformation = false;
+	private boolean containsSimpleHierarchyInformation = false;
 
 	//*******************************************
 	// Methods
@@ -135,66 +155,128 @@ public class AqdefHierarchy {
 		KKey kKey = entry.getKey();
 
 		if (isNodeDefinition(kKey)) {
-
 			nodeDefinitions.put(entry.getIndex(), entry);
 
 		} else if (isBinding(kKey)) {
-
 			nodeBindings.computeIfAbsent(entry.getIndex(), k -> new ArrayList<>()).add(entry);
 
 		} else {
 			throw new IllegalArgumentException("Unknown hierarchy entry. Key: " + kKey + " Value: " + Objects.toString(entry.getValue()));
 		}
 	}
-
-	private boolean isBinding(KKey kKey) {
-		return isNodeBinding(kKey) || isCharacteristicBinding(kKey);
-	}
-
+	
 	/**
-	 * Binding between node and another node (group or characteristic that contins child characteristics).
-	 * @param kKey
-	 * @return
+	 * Get the normalized hierarchy.
+	 * 
+	 * @param aqdefObjectModel
+	 *            an aqdef model containing this hierarchy, must not be {@code null}
+	 * @return normalized hierarchy, the source hierarchy is not changed
 	 */
-	private boolean isNodeBinding(KKey kKey) {
-		return kKey.equals(KEY_NODE_BINDING);
+	public AqdefHierarchy normalize(AqdefObjectModel aqdefObjectModel) {
+		requireNonNull(aqdefObjectModel);
+		
+		if (this != aqdefObjectModel.getHierarchy()) {
+			throw new IllegalArgumentException("The provided aqdef model does not contain this normalized hierarchy.");
+		}
+		
+		// currently we only normalize hierarchy created from a simple characteristics grouping
+		AqdefHierarchy normalizedHierarchy = normalizeSimpleCharacteristicsGrouping(aqdefObjectModel);
+		
+		return normalizedHierarchy;
 	}
-
-	/**
-	 * Binding between node and characteristic that does not contin child characteristics.
-	 *
-	 * @param kKey
-	 * @return
-	 */
-	private boolean isCharacteristicBinding(KKey kKey) {
-		return kKey.equals(KEY_CHARACTERISTIC_BINDING);
+	
+	private AqdefHierarchy normalizeSimpleCharacteristicsGrouping(AqdefObjectModel aqdefObjectModel) {
+		if (!containsSimpleHierarchyInformation) {
+			return this;
+		}
+		
+		// this is a hierarchy created from a simple characteristics grouping
+		// it means there should be no part node nor logical group nodes
+		
+		forEachNodeDefinition(entry -> {
+			KKey kKey = entry.getKey();
+			
+			if (isPartNode(kKey)) {
+				throw new IllegalStateException("Hierarchy was created from a simple characteristics grouping. "
+						+ "It should not contain any part node element, but it does.");
+			}
+			
+			if (isGroupNode(kKey)) {
+				throw new IllegalStateException("Hierarchy was created from a simple characteristics grouping. "
+						+ "It should not contain any logical group node element, but it does.");
+			}
+		});
+		
+		AqdefHierarchy normalizedHierarchy = new AqdefHierarchy();
+		AtomicInteger hierarchyNodeIndexCounter = new AtomicInteger();
+		
+		aqdefObjectModel.forEachPart(part -> {
+			
+			Integer partIndex = part.getIndex().getIndex();
+			
+			// create a root part node
+			NodeIndex partNodeIndex = NodeIndex.of(hierarchyNodeIndexCounter.incrementAndGet());
+			normalizedHierarchy.putEntry(new HierarchyEntry(KEY_PART_NODE, partNodeIndex, partIndex));
+			
+			Map<Integer /* old node index */, Integer /* new node index */> nodesIndexMap = new HashMap<>();
+			
+			// add all characteristic nodes with new indexes
+			forEachNodeDefinition(entry -> {
+				
+				KKey kKey = entry.getKey();
+				Integer characteristicIndex = (Integer) entry.getValue();
+				NodeIndex characteristicsNodeIndex = NodeIndex.of(hierarchyNodeIndexCounter.incrementAndGet());
+				
+				normalizedHierarchy.putEntry(new HierarchyEntry(kKey, characteristicsNodeIndex, characteristicIndex));
+				nodesIndexMap.put(entry.getIndex().getIndex(), characteristicsNodeIndex.getIndex());
+			});
+			
+			// bind all root characteristic nodes to the root part node
+			forEachNodeDefinition(entry -> {
+				
+				NodeIndex oldNodeIndex = entry.getIndex();
+				Integer nodeIndex = nodesIndexMap.get(oldNodeIndex.getIndex());
+				
+				if (!getParentNodeIndexOfNode(oldNodeIndex).isPresent()) {
+					normalizedHierarchy.putEntry(new HierarchyEntry(KEY_NODE_BINDING, partNodeIndex, nodeIndex));
+				}
+			});
+			
+			// add all existing bindings with modified indexes
+			forEachNodeBinding(entry -> {
+				
+				KKey kKey = entry.getKey();
+				
+				NodeIndex characteristicBindingSourceNodeIndex = entry.getIndex();
+				characteristicBindingSourceNodeIndex = NodeIndex.of(nodesIndexMap.get(characteristicBindingSourceNodeIndex.getIndex()));
+				
+				Integer characteristicBindingTargetNodeIndex = (Integer) entry.getValue();
+				
+				if (isNodeBinding(kKey)) {
+					// get the new index
+					characteristicBindingTargetNodeIndex = nodesIndexMap.get(characteristicBindingTargetNodeIndex);
+				}
+				
+				normalizedHierarchy.putEntry(new HierarchyEntry(kKey, characteristicBindingSourceNodeIndex, characteristicBindingTargetNodeIndex));
+			});
+			
+			// bind all orphan characteristics to the root part node
+			aqdefObjectModel.forEachCharacteristic(part, characteristic -> {
+				CharacteristicIndex characteristicIndex = characteristic.getIndex();
+				
+				if (getNodeIndexOfCharacteristic(characteristicIndex).isPresent() ||
+					getParentNodeIndexOfCharacteristic(characteristicIndex).isPresent()) {
+					
+					return;
+				}
+				
+				normalizedHierarchy.putEntry(new HierarchyEntry(KEY_CHARACTERISTIC_BINDING, partNodeIndex, characteristicIndex.getCharacteristicIndex()));
+			});
+		});
+		
+		return normalizedHierarchy;
 	}
-
-
-	private boolean isNodeDefinition(KKey kKey) {
-		return isPartNode(kKey) || isCharacteristicNode(kKey) || isGroupNode(kKey);
-	}
-
-	private boolean isPartNode(KKey kKey) {
-		return kKey.equals(KEY_PART_NODE);
-	}
-
-	private boolean isCharacteristicNode(KKey kKey) {
-		return kKey.equals(KEY_CHARACTERISTIC_NODE);
-	}
-
-	private boolean isGroupNode(KKey kKey) {
-		return kKey.equals(KEY_GROUP_NODE);
-	}
-
-	private boolean isCharacteristicSimpleGroupingParent(KKey kKey) {
-		return kKey.equals(KEY_SIMPLE_GROUPING_CHARACTERISTIC_PARENT);
-	}
-
-	private boolean isCharacteristicSimpleGroupingChild(KKey kKey) {
-		return kKey.equals(KEY_SIMPLE_GROUPING_CHARACTERISTIC_CHILD);
-	}
-
+	
 	public void forEachNodeDefinition(Consumer<HierarchyEntry> action) {
 		nodeDefinitions.values().forEach(action);
 	}
@@ -252,8 +334,8 @@ public class AqdefHierarchy {
 	 * Find index of parent characteristic or group of given group.
 	 *
 	 * @param groupIndex
-	 * @return optional containing {@link CharacteristicIndex} or {@link GroupIndex} of parent, or empty optional if given
-	 *         group do not have a parent
+	 * @return optional containing {@link CharacteristicIndex} or {@link GroupIndex}
+	 *         of parent, or empty optional if given group do not have a parent
 	 */
 	public Optional<Object> getParentIndex(GroupIndex groupIndex) {
 		Optional<NodeIndex> nodeIndexOfGroup = getNodeIndexOfGroup(groupIndex);
@@ -282,8 +364,10 @@ public class AqdefHierarchy {
 
 		if (nodeDefinition.getKey().equals(KEY_CHARACTERISTIC_NODE)) {
 			return Optional.of(CharacteristicIndex.of(partIndex, index));
+			
 		} else if (nodeDefinition.getKey().equals(KEY_GROUP_NODE)) {
 			return Optional.of(GroupIndex.of(partIndex, index));
+			
 		} else {
 			return Optional.empty();
 		}
@@ -383,6 +467,56 @@ public class AqdefHierarchy {
 			return false;
 		}
 		return true;
+	}
+	
+	private boolean isBinding(KKey kKey) {
+		return isNodeBinding(kKey) || isCharacteristicBinding(kKey);
+	}
+
+	/**
+	 * Binding between node and another node (group or characteristic that contins
+	 * child characteristics).
+	 * 
+	 * @param kKey
+	 * @return
+	 */
+	private static boolean isNodeBinding(KKey kKey) {
+		return kKey.equals(KEY_NODE_BINDING);
+	}
+
+	/**
+	 * Binding between node and characteristic that does not contin child characteristics.
+	 *
+	 * @param kKey
+	 * @return
+	 */
+	private static boolean isCharacteristicBinding(KKey kKey) {
+		return kKey.equals(KEY_CHARACTERISTIC_BINDING);
+	}
+
+
+	private static boolean isNodeDefinition(KKey kKey) {
+		return isPartNode(kKey) || isCharacteristicNode(kKey) || isGroupNode(kKey);
+	}
+
+	private static boolean isPartNode(KKey kKey) {
+		return kKey.equals(KEY_PART_NODE);
+	}
+
+	private static boolean isCharacteristicNode(KKey kKey) {
+		return kKey.equals(KEY_CHARACTERISTIC_NODE);
+	}
+
+	private static boolean isGroupNode(KKey kKey) {
+		return kKey.equals(KEY_GROUP_NODE);
+	}
+
+	private static boolean isCharacteristicSimpleGroupingParent(KKey kKey) {
+		return kKey.equals(KEY_SIMPLE_GROUPING_CHARACTERISTIC_PARENT);
+	}
+
+	private static boolean isCharacteristicSimpleGroupingChild(KKey kKey) {
+		return kKey.equals(KEY_SIMPLE_GROUPING_CHARACTERISTIC_CHILD);
 	}
 
 	//*******************************************

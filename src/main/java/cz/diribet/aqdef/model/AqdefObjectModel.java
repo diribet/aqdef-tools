@@ -26,18 +26,25 @@ import cz.diribet.aqdef.writer.AqdefWriter;
 /**
  * Object model of AQDEF content.
  * <p>
- * Provides methods to manipulate with the content (getXXX, putXXX, removeXXX, filterXXX) and to iterate through the content
- * (forEachXXX).
+ * Provides methods to
+ * <ul>
+ * <li>manipulate with the content ({@code getXXX}, {@code putXXX},
+ * {@code removeXXX}, {@code filterXXX})</li>
+ * <li>iterate through the content {@code forEachXXX}</li>
+ * </ul>
  * </p>
  * <p>
- * Use {@link AqdefParser} to read AQDEF content and {@link AqdefWriter} to write this object model as AQDEF content.
+ * Use {@link AqdefParser} to read AQDEF content and {@link AqdefWriter} to
+ * write this object model as AQDEF content.
  * </p>
  *
  * @author Vlastimil Dolejs
+ * 
  * @see AqdefParser
  * @see AqdefWriter
  */
 public class AqdefObjectModel {
+	
 	//*******************************************
 	// Attributes
 	//*******************************************
@@ -794,7 +801,14 @@ public class AqdefObjectModel {
 	}
 
 	/**
-	 * Apply all /0 K-keys on all parts / characteristics / values and then remove them from object model.
+	 * Normalize the AQDEF content.
+	 * <ul>
+	 * <li>Apply all /0 K-keys on all parts / characteristics / values and then
+	 * remove them from object model.</li>
+	 * <li>Complement the hierarchy so there are no nodes/characteristics wihout a
+	 * parent part node. This may happen when hierarchy was created from simple
+	 * characteristics grouping (K2030/K2031).</li>
+	 * </ul>
 	 */
 	public void normalize() {
 		// normalize part entries
@@ -856,8 +870,10 @@ public class AqdefObjectModel {
 				}
 			});
 		});
+		
+		hierarchy = hierarchy.normalize(this);
 	}
-
+	
 	/**
 	 * Returns total number of characteristics of all parts in this object model
 	 *
