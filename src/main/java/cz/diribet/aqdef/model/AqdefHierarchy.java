@@ -123,19 +123,30 @@ public class AqdefHierarchy {
 		if (containsHierarchyInformation) {
 			throw new RuntimeException("Combination of hierarchy (K51xx) and simple hierarchy (K2030/2031) is not supported.");
 		}
+		
+		NodeIndex nodeIndex = NodeIndex.of(valueInt);
 
 		if (isCharacteristicSimpleGroupingParent(kKey)) {
 
 			// create characteristic node
-			NodeIndex nodeIndex = NodeIndex.of((Integer) value);
 			HierarchyEntry hierarchyEntry = new HierarchyEntry(KEY_CHARACTERISTIC_NODE, nodeIndex, index);
 			putEntryInternal(hierarchyEntry);
 
 		} else if (isCharacteristicSimpleGroupingChild(kKey)) {
 
-			// bind characteristic to its parent node
-			NodeIndex nodeIndex = NodeIndex.of((Integer) value);
-			HierarchyEntry hierarchyEntry = new HierarchyEntry(KEY_CHARACTERISTIC_BINDING, nodeIndex, index);
+			HierarchyEntry hierarchyEntry;
+			Optional<NodeIndex> existingNodeIndexOfCharacteristic = getNodeIndexOfCharacteristic(index);
+			
+			if (existingNodeIndexOfCharacteristic.isPresent()) {
+				// bind characteristic node to its parent node
+				Integer existingNodeIndexOfCharacteristicInt = existingNodeIndexOfCharacteristic.get().getIndex();
+				hierarchyEntry = new HierarchyEntry(KEY_NODE_BINDING, nodeIndex, existingNodeIndexOfCharacteristicInt);
+
+			} else {
+				// bind characteristic to its parent node
+				hierarchyEntry = new HierarchyEntry(KEY_CHARACTERISTIC_BINDING, nodeIndex, index);
+			}
+			
 			putEntryInternal(hierarchyEntry);
 
 		} else {
