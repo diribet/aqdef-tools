@@ -11,6 +11,8 @@ class AqdefWriterTest_attributiveDfq extends Specification {
 
 	def "create DFQ with single attributive characteristic and sigle error log sheet characteristic"() {
 		given:
+			def expectedContent = getClass().getResourceAsStream("attributiveDfq_attributiveCharacteristic_and_errorLogSheet.dfq").text
+			
 			def builder = new AqdefObjectModelBuilder()
 
 			def partIndex = 1
@@ -44,8 +46,7 @@ class AqdefWriterTest_attributiveDfq extends Specification {
 			def objectModel = builder.build()
 
 		when:
-			def content = new AqdefWriter().writeToString(objectModel)
-			def expectedContent = getClass().getResourceAsStream("attributiveDfq_attributiveCharacteristic_and_errorLogSheet.dfq").text
+			def content = new AqdefWriter().writeToString(objectModel)			
 
 		then:
 			content == expectedContent
