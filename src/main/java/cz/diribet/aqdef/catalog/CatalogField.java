@@ -6,8 +6,10 @@ import static java.util.stream.Collectors.toMap;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -235,6 +237,10 @@ public enum CatalogField {
 	 */
 	public boolean isIdField() {
 		return type == CatalogFieldType.ID;
+	}
+
+	public static Set<Catalog> catalogsWithDefinedFields() {
+		return new HashSet<>(FIELDS_BY_CATALOG.keySet());
 	}
 
 	/**
