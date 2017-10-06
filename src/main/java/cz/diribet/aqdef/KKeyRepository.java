@@ -329,7 +329,7 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K1223"), KKeyMetadata.of("TEPRUEFERKEY", Integer.class, 5)); //Prï¿½fer Key (K1223)
 			keys.put(KKey.of("K1221"), KKeyMetadata.of("TEPRUEFERNR", String.class, 20)); //Prï¿½fernummer (K1221)
 			keys.put(KKey.of("K1222"), KKeyMetadata.of("TEPRUEFERNAME", String.class, 40)); //Prï¿½fername (K1222)
-			keys.put(KKey.of("K1800"), KKeyMetadata.of("TEFREIFELD", String.class, 50)); //Freifelder gefï¿½llt (K1800-1899)
+			keys.put(KKey.of("K1800"), KKeyMetadata.of("TEFREIFELD", Integer.class, 5)); //Freifelder gefï¿½llt (K1800-1899)
 			keys.put(KKey.of("K1016"), KKeyMetadata.of("TEZSB_1016", String.class, 30)); //"Zusammenbauteil" (K1016)
 			keys.put(KKey.of("K1350"), KKeyMetadata.of("TEREPORTFILE_1350", String.class, 50)); //Verknï¿½pfung des Teils mit einer Berichtsdatei (*.def) (K1350)
 			keys.put(KKey.of("K1045"), KKeyMetadata.of("TE_1045", String.class, 20)); //Zeichnungsgï¿½ltigkeitsdatum (K1045)
