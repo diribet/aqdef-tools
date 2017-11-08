@@ -164,10 +164,29 @@ public class AqdefParser implements AqdefConstants {
 		}
 
 		Integer index = 1;
+		Integer valueIndexNumber = null;
 		if (hasIndex) {
 			String indexString = line.substring(6, firstSpaceIndex);
 			if (StringUtils.isNotBlank(indexString)) {
-				index = Integer.valueOf(indexString);
+				int valueIndexSeparatorPosition = indexString.indexOf("/");
+				if (valueIndexSeparatorPosition == -1) {
+					try {
+						index = Integer.valueOf(indexString);
+					} catch (NumberFormatException e) {
+						throw new AqdefValidityException("K-key index is invalid: " + indexString, e);
+					}
+				} else {
+					if (kKey.isValueLevel()) {
+						try {
+							index = Integer.valueOf(indexString.substring(0, valueIndexSeparatorPosition));
+							valueIndexNumber = Integer.valueOf(indexString.substring(valueIndexSeparatorPosition + 1));
+						} catch (NumberFormatException e) {
+							throw new AqdefValidityException("K-key index is invalid: " + indexString, e);
+						}
+					} else {
+						throw new AqdefValidityException("K-key index (" + indexString + ") contains a value index but the K-key (" + kKey + ") is not a value key.");
+					}
+				}
 			}
 		}
 
@@ -236,7 +255,12 @@ public class AqdefParser implements AqdefConstants {
 				}
 			}
 			CharacteristicIndex characteristicIndex = CharacteristicIndex.of(partIndex, index);
-			ValueIndex valueIndex = context.getValueIndexCounter().getIndex(characteristicIndex, kKey);
+			ValueIndex valueIndex;
+			if (valueIndexNumber == null) {
+				valueIndex = context.getValueIndexCounter().getIndex(characteristicIndex, kKey);
+			} else {
+				valueIndex = ValueIndex.of(characteristicIndex, valueIndexNumber);
+			}
 
 			aqdefObjectModel.putValueEntry(kKey, valueIndex, value);
 

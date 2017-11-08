@@ -10,6 +10,7 @@ import cz.diribet.aqdef.model.PartIndex
 import cz.diribet.aqdef.model.AqdefObjectModel.CharacteristicEntries
 import cz.diribet.aqdef.model.AqdefObjectModel.PartEntries
 import cz.diribet.aqdef.model.AqdefObjectModel.ValueEntries
+import spock.lang.Ignore
 import spock.lang.Specification
 
 class AqdefParserTest extends Specification {
@@ -328,6 +329,90 @@ class AqdefParserTest extends Specification {
 			thrown(RuntimeException)
 	}
 
+	def "additional data are assigned to the value that preceeds the additional data definition"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithAdditionalDataForLastValue)
+
+			ValueEntries entries1 = model.getValueEntries(1, 1, 1)
+			ValueEntries entries2 = model.getValueEntries(1, 1, 2)
+
+		then:
+			entries1.getValue("K0014") == null
+			entries2.getValue("K0014") == "partId2"
+
+	}
+
+	def "additional data with value index are assigned to the right value"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithAdditionalDataForValueWithIndex)
+
+			ValueEntries entries1 = model.getValueEntries(1, 1, 1)
+			ValueEntries entries2 = model.getValueEntries(1, 1, 2)
+
+		then:
+			entries1.getValue("K0014") == "partId1"
+			entries2.getValue("K0014") == null
+
+	}
+
+	def "additional data with value index for all characteristics (/0) are assigned to the right values"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithAdditionalDataForValueWithIndexAndAllCharacteristics)
+
+			ValueEntries value1ofCharacteristic1 = model.getValueEntries(1, 1, 1)
+			ValueEntries value2ofCharacteristic1 = model.getValueEntries(1, 1, 2)
+			ValueEntries value1ofCharacteristic2 = model.getValueEntries(1, 2, 1)
+			ValueEntries value2ofCharacteristic2 = model.getValueEntries(1, 2, 2)
+
+		then:
+			value1ofCharacteristic1.getValue("K0014") == "partId1"
+			value1ofCharacteristic2.getValue("K0014") == "partId1"
+			value2ofCharacteristic1.getValue("K0014") == null
+			value2ofCharacteristic2.getValue("K0014") == null
+
+	}
+
+	@Ignore // this functionality is not implemented
+	def "additional data with value index for all values of single characteristics are assigned to the right values"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithAdditionalDataForAllValuesOfSingleCharacteristic)
+
+			ValueEntries value1ofCharacteristic1 = model.getValueEntries(1, 1, 1)
+			ValueEntries value2ofCharacteristic1 = model.getValueEntries(1, 1, 2)
+			ValueEntries value1ofCharacteristic2 = model.getValueEntries(1, 2, 1)
+			ValueEntries value2ofCharacteristic2 = model.getValueEntries(1, 2, 2)
+
+		then:
+			value1ofCharacteristic1.getValue("K0014") == "partId1"
+			value2ofCharacteristic1.getValue("K0014") == "partId1"
+			value1ofCharacteristic2.getValue("K0014") == null
+			value2ofCharacteristic2.getValue("K0014") == null
+
+	}
+
+	def "value index can be placed only on value k-keys"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithValueIndexPlacedOnCharacteristicKKey)
+
+		then:
+			thrown(RuntimeException)
+	}
+
+	def "invalid index will cause exception"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithInvalidIndex)
+
+		then:
+			thrown(RuntimeException)
+	}
+
+	def "empty value index will cause exception"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithEmptyValueIndex)
+
+		then:
+			thrown(RuntimeException)
+	}
 
 	def parse(String dfq) {
 		def parser = new AqdefParser()
@@ -592,5 +677,67 @@ class AqdefParserTest extends Specification {
 		K5112/3 2
 		K5102/1 1
 		K5102/1 2
+	"""
+
+	def dfqWithAdditionalDataForLastValue = """
+		K0100 2
+		K1001/1 part1
+		K2001/1 characteristic1
+		1001.01.2014/00:00:00
+		2001.01.2014/00:00:00
+		K0014/1 partId2
+	"""
+
+	def dfqWithAdditionalDataForValueWithIndex = """
+		K0100 2
+		K1001/1 part1
+		K2001/1 characteristic1
+		1001.01.2014/00:00:00
+		2001.01.2014/00:00:00
+		K0014/1/1 partId1
+	"""
+
+	def dfqWithAdditionalDataForValueWithIndexAndAllCharacteristics = """
+		K0100 2
+		K1001/1 part1
+		K2001/1 characteristic1
+		K2001/2 characteristic2
+		1001.01.2014/00:00:002001.01.2014/00:00:00
+		3001.01.2014/00:00:004001.01.2014/00:00:00
+		K0014/0/1 partId1
+	"""
+
+	def dfqWithAdditionalDataForAllValuesOfSingleCharacteristic = """
+		K0100 2
+		K1001/1 part1
+		K2001/1 characteristic1
+		K2001/2 characteristic2
+		1001.01.2014/00:00:002001.01.2014/00:00:00
+		3001.01.2014/00:00:004001.01.2014/00:00:00
+		K0014/1/0 partId1
+	"""
+
+	def dfqWithValueIndexPlacedOnCharacteristicKKey = """
+		K0100 2
+		K1001/1 part1
+		K2001/1 characteristic1
+		K2002/1/1 invalid characteristic name
+		1001.01.2014/00:00:00
+		2001.01.2014/00:00:00
+	"""
+
+	def dfqWithInvalidIndex = """
+		K0100 2
+		K1001/1 part1
+		K2001/1-1 characteristic1
+		1001.01.2014/00:00:00
+	"""
+
+	def dfqWithEmptyValueIndex = """
+		K0100 2
+		K1001/1 part1
+		K2001/1 characteristic1
+		1001.01.2014/00:00:00
+		K0014/1/ partId1
 	"""
 }
