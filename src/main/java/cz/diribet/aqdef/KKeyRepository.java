@@ -247,6 +247,70 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K8524"), KKeyMetadata.of("?K8524?", BigDecimal.class, false));
 			keys.put(KKey.of("K8525"), KKeyMetadata.of("?K8525?", BigDecimal.class, false));
 
+			// part user fields
+			keys.put(KKey.of("K1800"), KKeyMetadata.of("?K1800?", String.class, 50, false));
+			keys.put(KKey.of("K1801"), KKeyMetadata.of("?K1801?", String.class, 1, false));
+			keys.put(KKey.of("K1802"), KKeyMetadata.of("?K1802?", String.class, 255, false));
+			keys.put(KKey.of("K1810"), KKeyMetadata.of("?K1810?", String.class, 50, false));
+			keys.put(KKey.of("K1811"), KKeyMetadata.of("?K1811?", String.class, 1, false));
+			keys.put(KKey.of("K1812"), KKeyMetadata.of("?K1812?", String.class, 255, false));
+			keys.put(KKey.of("K1820"), KKeyMetadata.of("?K1820?", String.class, 50, false));
+			keys.put(KKey.of("K1821"), KKeyMetadata.of("?K1821?", String.class, 1, false));
+			keys.put(KKey.of("K1822"), KKeyMetadata.of("?K1822?", String.class, 255, false));
+			keys.put(KKey.of("K1830"), KKeyMetadata.of("?K1830?", String.class, 50, false));
+			keys.put(KKey.of("K1831"), KKeyMetadata.of("?K1831?", String.class, 1, false));
+			keys.put(KKey.of("K1832"), KKeyMetadata.of("?K1832?", String.class, 255, false));
+			keys.put(KKey.of("K1840"), KKeyMetadata.of("?K1840?", String.class, 50, false));
+			keys.put(KKey.of("K1841"), KKeyMetadata.of("?K1841?", String.class, 1, false));
+			keys.put(KKey.of("K1842"), KKeyMetadata.of("?K1842?", String.class, 255, false));
+			keys.put(KKey.of("K1850"), KKeyMetadata.of("?K1850?", String.class, 50, false));
+			keys.put(KKey.of("K1851"), KKeyMetadata.of("?K1851?", String.class, 1, false));
+			keys.put(KKey.of("K1852"), KKeyMetadata.of("?K1852?", String.class, 255, false));
+			keys.put(KKey.of("K1860"), KKeyMetadata.of("?K1860?", String.class, 50, false));
+			keys.put(KKey.of("K1861"), KKeyMetadata.of("?K1861?", String.class, 1, false));
+			keys.put(KKey.of("K1862"), KKeyMetadata.of("?K1862?", String.class, 255, false));
+			keys.put(KKey.of("K1870"), KKeyMetadata.of("?K1870?", String.class, 50, false));
+			keys.put(KKey.of("K1871"), KKeyMetadata.of("?K1871?", String.class, 1, false));
+			keys.put(KKey.of("K1872"), KKeyMetadata.of("?K1872?", String.class, 255, false));
+			keys.put(KKey.of("K1880"), KKeyMetadata.of("?K1880?", String.class, 50, false));
+			keys.put(KKey.of("K1881"), KKeyMetadata.of("?K1881?", String.class, 1, false));
+			keys.put(KKey.of("K1882"), KKeyMetadata.of("?K1882?", String.class, 255, false));
+			keys.put(KKey.of("K1890"), KKeyMetadata.of("?K1890?", String.class, 50, false));
+			keys.put(KKey.of("K1891"), KKeyMetadata.of("?K1891?", String.class, 1, false));
+			keys.put(KKey.of("K1892"), KKeyMetadata.of("?K1892?", String.class, 255, false));
+
+			// characteristic user fields
+			keys.put(KKey.of("K2800"), KKeyMetadata.of("?K2800?", String.class, 50, false));
+			keys.put(KKey.of("K2801"), KKeyMetadata.of("?K2801?", String.class, 1, false));
+			keys.put(KKey.of("K2802"), KKeyMetadata.of("?K2802?", String.class, 255, false));
+			keys.put(KKey.of("K2810"), KKeyMetadata.of("?K2810?", String.class, 50, false));
+			keys.put(KKey.of("K2811"), KKeyMetadata.of("?K2811?", String.class, 1, false));
+			keys.put(KKey.of("K2812"), KKeyMetadata.of("?K2812?", String.class, 255, false));
+			keys.put(KKey.of("K2820"), KKeyMetadata.of("?K2820?", String.class, 50, false));
+			keys.put(KKey.of("K2821"), KKeyMetadata.of("?K2821?", String.class, 1, false));
+			keys.put(KKey.of("K2822"), KKeyMetadata.of("?K2822?", String.class, 255, false));
+			keys.put(KKey.of("K2830"), KKeyMetadata.of("?K2830?", String.class, 50, false));
+			keys.put(KKey.of("K2831"), KKeyMetadata.of("?K2831?", String.class, 1, false));
+			keys.put(KKey.of("K2832"), KKeyMetadata.of("?K2832?", String.class, 255, false));
+			keys.put(KKey.of("K2840"), KKeyMetadata.of("?K2840?", String.class, 50, false));
+			keys.put(KKey.of("K2841"), KKeyMetadata.of("?K2841?", String.class, 1, false));
+			keys.put(KKey.of("K2842"), KKeyMetadata.of("?K2842?", String.class, 255, false));
+			keys.put(KKey.of("K2850"), KKeyMetadata.of("?K2850?", String.class, 50, false));
+			keys.put(KKey.of("K2851"), KKeyMetadata.of("?K2851?", String.class, 1, false));
+			keys.put(KKey.of("K2852"), KKeyMetadata.of("?K2852?", String.class, 255, false));
+			keys.put(KKey.of("K2860"), KKeyMetadata.of("?K2860?", String.class, 50, false));
+			keys.put(KKey.of("K2861"), KKeyMetadata.of("?K2861?", String.class, 1, false));
+			keys.put(KKey.of("K2862"), KKeyMetadata.of("?K2862?", String.class, 255, false));
+			keys.put(KKey.of("K2870"), KKeyMetadata.of("?K2870?", String.class, 50, false));
+			keys.put(KKey.of("K2871"), KKeyMetadata.of("?K2871?", String.class, 1, false));
+			keys.put(KKey.of("K2872"), KKeyMetadata.of("?K2872?", String.class, 255, false));
+			keys.put(KKey.of("K2880"), KKeyMetadata.of("?K2880?", String.class, 50, false));
+			keys.put(KKey.of("K2881"), KKeyMetadata.of("?K2881?", String.class, 1, false));
+			keys.put(KKey.of("K2882"), KKeyMetadata.of("?K2882?", String.class, 255, false));
+			keys.put(KKey.of("K2890"), KKeyMetadata.of("?K2890?", String.class, 50, false));
+			keys.put(KKey.of("K2891"), KKeyMetadata.of("?K2891?", String.class, 1, false));
+			keys.put(KKey.of("K2892"), KKeyMetadata.of("?K2892?", String.class, 255, false));
+
 			return keys;
 		}
 
@@ -329,7 +393,6 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K1223"), KKeyMetadata.of("TEPRUEFERKEY", Integer.class, 5)); //Prï¿½fer Key (K1223)
 			keys.put(KKey.of("K1221"), KKeyMetadata.of("TEPRUEFERNR", String.class, 20)); //Prï¿½fernummer (K1221)
 			keys.put(KKey.of("K1222"), KKeyMetadata.of("TEPRUEFERNAME", String.class, 40)); //Prï¿½fername (K1222)
-			keys.put(KKey.of("K1800"), KKeyMetadata.of("TEFREIFELD", Integer.class, 5)); //Freifelder gefï¿½llt (K1800-1899)
 			keys.put(KKey.of("K1016"), KKeyMetadata.of("TEZSB_1016", String.class, 30)); //"Zusammenbauteil" (K1016)
 			keys.put(KKey.of("K1350"), KKeyMetadata.of("TEREPORTFILE_1350", String.class, 50)); //Verknï¿½pfung des Teils mit einer Berichtsdatei (*.def) (K1350)
 			keys.put(KKey.of("K1045"), KKeyMetadata.of("TE_1045", String.class, 20)); //Zeichnungsgï¿½ltigkeitsdatum (K1045)
