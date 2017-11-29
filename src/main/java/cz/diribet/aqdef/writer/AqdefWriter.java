@@ -11,8 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import cz.diribet.aqdef.AqdefConstants;
 import cz.diribet.aqdef.KKey;
-import cz.diribet.aqdef.KKeyMetadata;
-import cz.diribet.aqdef.KKeyRepository;
 import cz.diribet.aqdef.convert.IKKeyValueConverter;
 import cz.diribet.aqdef.model.AqdefHierarchy.HierarchyEntry;
 import cz.diribet.aqdef.model.AqdefObjectModel;
@@ -37,21 +35,6 @@ import cz.diribet.aqdef.model.AqdefObjectModel.ValueEntry;
  *
  */
 public class AqdefWriter implements AqdefConstants {
-	
-	//*******************************************
-	// Attributes
-	//*******************************************
-
-	private final KKeyRepository kKeyRepository;
-
-	//*******************************************
-	// Constructors
-	//*******************************************
-
-	public AqdefWriter() {
-		this.kKeyRepository = KKeyRepository.getInstance();
-	}
-
 	//*******************************************
 	// Methods
 	//*******************************************
@@ -70,7 +53,7 @@ public class AqdefWriter implements AqdefConstants {
 
 		try {
 			writeTo(aqdefObjectModel, fileContent);
-			
+
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to write AQDFQ model content", e);
 		}
@@ -181,7 +164,7 @@ public class AqdefWriter implements AqdefConstants {
 		KKey kKey = entry.getKey();
 		Integer characteristicIndex = entry.getIndex().getCharacteristicIndex().getCharacteristicIndex();
 		String value = convertValueOfKKey(kKey, entry.getValue());
-		
+
 		write(kKey.getKey(), characteristicIndex, value, writer);
 	}
 
@@ -203,18 +186,24 @@ public class AqdefWriter implements AqdefConstants {
 			writer.write(VALUES_SEPARATOR);
 			writer.write(StringUtils.defaultString(value, StringUtils.EMPTY));
 			writer.write(LINE_SEPARATOR);
-			
+
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private String convertValueOfKKey(KKey kKey, Object value) {
 		String result;
-		
+
 		try {
-			result = getKKeyValueConverter(kKey).toString(value);
-			
+			IKKeyValueConverter<Object> converter = (IKKeyValueConverter<Object>) kKey.getConverter();
+			if (converter == null) {
+				throw new IllegalArgumentException("Can't find converter for k-key " + kKey);
+			}
+
+			result = converter.toString(value);
+
 		} catch (Throwable e) {
 			throw new RuntimeException("Failed to convert value (" + Objects.toString(value) + ") of k-key " + kKey + " to string", e);
 		}
@@ -222,20 +211,8 @@ public class AqdefWriter implements AqdefConstants {
 		if (result != null) {
 			result = result.trim();
 		}
-		
+
 		return result;
-	}
-
-	@SuppressWarnings("unchecked")
-	private IKKeyValueConverter<Object> getKKeyValueConverter(KKey kKey) {
-		KKeyMetadata kKeyMetadata = kKeyRepository.getMetadataFor(kKey);
-
-		if (kKeyMetadata == null) {
-			throw new IllegalArgumentException("Can't find converter for unknown k-key " + kKey);
-			
-		} else {
-			return (IKKeyValueConverter<Object>) kKeyMetadata.getConverter();
-		}
 	}
 
 }
