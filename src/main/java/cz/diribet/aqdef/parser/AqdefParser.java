@@ -338,7 +338,7 @@ public class AqdefParser implements AqdefConstants {
 				Integer characteristicType = characteristicEntries.getValue("K2004");
 
 				if (characteristicType != null) {
-					if (characteristicType == 5 || characteristicType == 6) { // 5, 6 - error log sheet
+					if (characteristicType == 1 || characteristicType == 5 || characteristicType == 6) { // 1 - attribute / 5, 6 - error log sheet
 						isAttributeCharacteristic = true;
 					} else {
 						isAttributeCharacteristic = false;

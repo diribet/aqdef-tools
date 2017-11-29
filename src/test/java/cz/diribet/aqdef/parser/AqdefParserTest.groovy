@@ -246,9 +246,28 @@ class AqdefParserTest extends Specification {
 			values2.size() == 0
 	}
 
+	def "single continuous and single atribute characteristic with values in binary format are parsed correctly" () {
+		when:
+			AqdefObjectModel model = parse(dfqWithAttributeCharacteristicWithBinaryValues)
+
+			ValueEntries char1Value1 = model.getValueEntries(1, 1, 1)
+			ValueEntries char1Value2 = model.getValueEntries(1, 1, 2)
+			ValueEntries char2Value1 = model.getValueEntries(1, 2, 1)
+			ValueEntries char2Value2 = model.getValueEntries(1, 2, 2)
+
+		then:
+			char1Value1.getValue("K0001") == 1
+			char1Value2.getValue("K0001") == 1.1
+
+			char2Value1.getValue("K0020") == 1
+			char2Value1.getValue("K0021") == 0
+			char2Value2.getValue("K0020") == 1
+			char2Value2.getValue("K0021") == 1
+	}
+
 	def "values in K-key format are parsed correctly - values are at the end" () {
 		when:
-			AqdefObjectModel model = parse(dfqWithTwoPartsWithBinaryValuesAtTheEnd)
+			AqdefObjectModel model = parse(dfqWithTwoPartsWithValuesAtTheEnd)
 
 			def values1 = model.getValueEntries(CharacteristicIndex.of(1, 1))
 			def values2 = model.getValueEntries(CharacteristicIndex.of(2, 2))
@@ -570,6 +589,17 @@ class AqdefParserTest extends Specification {
 		K1001/2 part2
 		K2001/2 characteristic2
 		2001.01.2014/00:00:00
+	"""
+
+	def dfqWithAttributeCharacteristicWithBinaryValues = """
+		K0100 2
+		K1001/1 part1
+		K2001/1 characteristic1
+		K2004/1 0
+		K2001/2 characteristic2
+		K2004/2 1
+		1001.01.2014/00:00:00100000001.01.2014/00:00:00
+		1.1001.01.2014/00:00:00100010001.01.2014/00:00:00
 	"""
 
 	def dfqWithTwoPartsWithValuesAtTheEnd = """
