@@ -47,11 +47,13 @@ public class AqdefParser implements AqdefConstants {
 
 	private static final Logger LOG = LoggerFactory.getLogger(AqdefParser.class);
 
+	private static final String IGNORED_BINARY_KEY = "ignore";
+
 	private static final String[] BINARY_VALUE_PORTIONS = new String[] {
 		"K0001", "K0002", "K0004", "K0005", "K0006", "K0007", "K0008", "K0010", "K0011", "K0012"};
 
 	private static final String[] BINARY_ATTRIBUTE_VALUE_PORTIONS = new String[] {
-		"K0020", "K0021", "??? unknown ???", "K0002", "K0004", "K0005", "K0006", "K0007", "K0008", "K0010", "K0011", "K0012"};
+		"K0020", "K0021", IGNORED_BINARY_KEY, "K0002", "K0004", "K0005", "K0006", "K0007", "K0008", "K0010", "K0011", "K0012"};
 
 	/**
 	 * These keys does not contain any information and we can safely ignore them.
@@ -361,6 +363,10 @@ public class AqdefParser implements AqdefConstants {
 			for (int i = 0; i < dataPortions.length; i++) {
 				String dataPortion = dataPortions[i];
 				String key = dataPortionKeys[i];
+
+				if (key == IGNORED_BINARY_KEY) {
+					continue;
+				}
 
 				KKey kKey = KKey.of(key);
 
