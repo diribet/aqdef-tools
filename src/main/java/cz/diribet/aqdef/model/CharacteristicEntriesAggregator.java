@@ -6,27 +6,29 @@ import cz.diribet.aqdef.KKey;
 import cz.diribet.aqdef.KKey.Level;
 
 /**
- * Aggregates entries of value, characteristic and part.
+ * Aggregates entries of characteristic and part.
  * This simplifies access to the values of the K-keys and passing of the entries to the other objects (crate).
  *
  * @author Vlastimil Dolejs
  *
  */
-public class ValueEntriesAggregator extends CharacteristicEntriesAggregator {
+public class CharacteristicEntriesAggregator implements IHasKKeyValues {
 	//*******************************************
 	// Attributes
 	//*******************************************
 
-	private final IHasKKeyValues valueEntries;
+	private final IHasKKeyValues partEntries;
+	private final IHasKKeyValues characteristicEntries;
 
 	//*******************************************
 	// Constructors
 	//*******************************************
 
-	public ValueEntriesAggregator(IHasKKeyValues partEntries, IHasKKeyValues characteristicEntries, IHasKKeyValues valueEntries) {
-		super(partEntries, characteristicEntries);
+	public CharacteristicEntriesAggregator(IHasKKeyValues partEntries, IHasKKeyValues characteristicEntries) {
+		super();
 
-		this.valueEntries = requireNonNull(valueEntries);
+		this.partEntries = requireNonNull(partEntries);
+		this.characteristicEntries = requireNonNull(characteristicEntries);
 	}
 
 	//*******************************************
@@ -38,12 +40,16 @@ public class ValueEntriesAggregator extends CharacteristicEntriesAggregator {
 		Level level = kKey.getLevel();
 
 		switch (level) {
-			case VALUE:
-			case CUSTOM_VALUE:
-				return valueEntries.getValue(kKey);
+			case PART:
+			case CUSTOM_PART:
+				return partEntries.getValue(kKey);
+
+			case CHARACTERISTIC:
+			case CUSTOM_CHARACTERISTIC:
+				return characteristicEntries.getValue(kKey);
 
 			default:
-				return super.getValue(kKey);
+				return null;
 		}
 	}
 
@@ -51,8 +57,12 @@ public class ValueEntriesAggregator extends CharacteristicEntriesAggregator {
 	// Getters / setters
 	//*******************************************
 
-	public IHasKKeyValues getValueEntries() {
-		return valueEntries;
+	public IHasKKeyValues getPartEntries() {
+		return partEntries;
+	}
+
+	public IHasKKeyValues getCharacteristicEntries() {
+		return characteristicEntries;
 	}
 
 }
