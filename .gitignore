@@ -4,4 +4,8 @@
 .settings
 .settings/*
 
+# ignore idea files
+.idea
+*.iml
+
 target
