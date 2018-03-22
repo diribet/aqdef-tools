@@ -149,13 +149,86 @@ public final class KKeyRepository {
 			Map<KKey, KKeyMetadata> keys = new HashMap<>();
 
 			// replace of wrongly generated key
-			keys.put(KKey.of("K0001"), KKeyMetadata.of("WVWERT", BigDecimal.class));
+			keys.put(KKey.of("K0001"), KKeyMetadata.builder()
+													.columnName("WVWERT")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			// target / nominal
+			keys.put(KKey.of("K2100"), KKeyMetadata.builder()
+													.columnName("MEZIELWERT")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			keys.put(KKey.of("K2101"), KKeyMetadata.builder()
+													.columnName("MENENNMAS")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			// limits
+			keys.put(KKey.of("K2110"), KKeyMetadata.builder()
+													.columnName("MEUGW")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			keys.put(KKey.of("K2111"), KKeyMetadata.builder()
+													.columnName("MEOGW")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			keys.put(KKey.of("K2114"), KKeyMetadata.builder()
+													.columnName("MEUGSCHROTT")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			keys.put(KKey.of("K2115"), KKeyMetadata.builder()
+													.columnName("MEOGSCHROTT")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			keys.put(KKey.of("K2116"), KKeyMetadata.builder()
+													.columnName("MENORMISTUN")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			keys.put(KKey.of("K2117"), KKeyMetadata.builder()
+													.columnName("MENORMISTOB")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			keys.put(KKey.of("K2130"), KKeyMetadata.builder()
+													.columnName("MEPLAUSIUN")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			keys.put(KKey.of("K2131"), KKeyMetadata.builder()
+													.columnName("MEPLAUSIOB")
+													.dataType(BigDecimal.class)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
 
 			// K0005 has special converter that converts it to list of event ids (List<Integer>)
-			keys.put(KKey.of("K0005"), KKeyMetadata.of("WV0005", List.class, (IKKeyValueConverter) new K0005ValueConverter()));
+			keys.put(KKey.of("K0005"), KKeyMetadata.builder()
+													.columnName("WV0005")
+													.dataType(List.class, (IKKeyValueConverter) new K0005ValueConverter())
+													.build());
 
 			// K0006 has special converter which trims leading # sign
-			keys.put(KKey.of("K0006"), KKeyMetadata.of("WVCHARGE", String.class, new K0006ValueConverter()));
+			keys.put(KKey.of("K0006"), KKeyMetadata.builder()
+													.columnName("WVCHARGE")
+													.dataType(String.class, new K0006ValueConverter())
+													.build());
 
 			// K0011 has special coding similar to K0005, but we do not support conversion of this field
 			keys.put(KKey.of("K0011"), KKeyMetadata.of("WV0011", String.class));
@@ -165,15 +238,33 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K2000"), KKeyMetadata.of("MEMERKMAL", Integer.class, false));
 
 			// K1017 is boolean
-			keys.put(KKey.of("K1017"), KKeyMetadata.of("TE_1017", Boolean.class, new BooleanKKeyValueConverter())); // v DB je to Integer 3
+			keys.put(KKey.of("K1017"), KKeyMetadata.builder()
+													.columnName("TE_1017")
+													.dataType(Boolean.class, new BooleanKKeyValueConverter()) // Integer 3 in the DB
+													.build());
 
 			// specification limits defined as relative allowance to the nominal
 			// they are not stored in DB (absolute specification limits K2110/K2111 are calculated from them and stored in DB)
-			keys.put(KKey.of("K2112"), KKeyMetadata.of("?K2112?", BigDecimal.class, false));
-			keys.put(KKey.of("K2113"), KKeyMetadata.of("?K2113?", BigDecimal.class, false));
+			keys.put(KKey.of("K2112"), KKeyMetadata.builder()
+													.columnName("?K2112?")
+													.dataType(BigDecimal.class)
+													.saveToDb(false)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
+
+			keys.put(KKey.of("K2113"), KKeyMetadata.builder()
+													.columnName("?K2113?")
+													.dataType(BigDecimal.class)
+													.saveToDb(false)
+													.respectsCharacteristicDecimalSettings(true)
+													.build());
 
 			// attribute values and error log sheets - these two keys are encoded to K0001 DB column
-			keys.put(KKey.of("K0020"), KKeyMetadata.of("?K0020?", Integer.class, new K0020ValueConverter(), false)); // subgroup size
+			keys.put(KKey.of("K0020"), KKeyMetadata.builder()
+													.columnName("?K0020?")
+													.dataType(Integer.class, new K0020ValueConverter())
+													.saveToDb(false)
+													.build()); // subgroup size
 			keys.put(KKey.of("K0021"), KKeyMetadata.of("?K0021?", Integer.class, false)); // number of errors
 
 			// missings K-keys

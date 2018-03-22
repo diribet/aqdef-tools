@@ -40,12 +40,19 @@ public final class KKeyMetadata {
 	 */
 	private final boolean saveToDb;
 
+	/**
+	 * Whether this K-key contains value that should respect decimal settings of the characteristic.
+	 * These value are measured value and its limits.
+	 */
+	private final boolean respectsCharacteristicDecimalSettings;
+
 	private KKeyMetadata(
 						String columnName,
 						Class<?> dataType,
 						Integer length,
 						IKKeyValueConverter<?> converter,
-						boolean saveToDb) {
+						boolean saveToDb,
+						boolean respectsCharacteristicDecimalSettings) {
 		super();
 
 		requireNonNull(columnName);
@@ -57,6 +64,11 @@ public final class KKeyMetadata {
 		this.length = length;
 		this.converter = converter;
 		this.saveToDb = saveToDb;
+		this.respectsCharacteristicDecimalSettings = respectsCharacteristicDecimalSettings;
+	}
+
+	public static KKeyMetadataBuilder builder() {
+		return new KKeyMetadataBuilder();
 	}
 
 	public static KKeyMetadata of(String columnName, Class<?> dataType) {
@@ -72,42 +84,12 @@ public final class KKeyMetadata {
 	}
 
 	public static KKeyMetadata of(String columnName, Class<?> dataType, Integer length, boolean saveToDb) {
-		IKKeyValueConverter<?> converter;
-		if (String.class.equals(dataType) || UUID.class.equals(dataType)) {
-
-			converter = new StringKKeyValueConverter();
-
-		} else if (Integer.class.equals(dataType)) {
-
-			converter = new IntegerKKeyValueConverter();
-
-		} else if (BigDecimal.class.equals(dataType)) {
-
-			converter = new BigDecimalKKeyValueConverter();
-
-		} else if (Date.class.equals(dataType)) {
-
-			converter = new DateKKeyValueConverter();
-
-		} else {
-
-			throw new IllegalArgumentException("There is no converter defined for data type: " + dataType.getName());
-
-		}
-
-		return new KKeyMetadata(columnName, dataType, length, converter, saveToDb);
-	}
-
-	public static <T> KKeyMetadata of(String columnName, Class<T> dataType, IKKeyValueConverter<T> converter) {
-		return of(columnName, dataType, converter, true);
-	}
-
-	public static <T> KKeyMetadata of(String columnName, Class<T> dataType, IKKeyValueConverter<T> converter, boolean saveToDb) {
-		return new KKeyMetadata(columnName, dataType, null, converter, saveToDb);
-	}
-
-	public static <T> KKeyMetadata of(String columnName, Class<T> dataType, int length, IKKeyValueConverter<T> converter) {
-		return new KKeyMetadata(columnName, dataType, length, converter, true);
+		return builder()
+					.columnName(columnName)
+					.dataType(dataType)
+					.length(length)
+					.saveToDb(saveToDb)
+					.build();
 	}
 
 	/**
@@ -154,6 +136,16 @@ public final class KKeyMetadata {
 	 */
 	public boolean isSaveToDb() {
 		return saveToDb;
+	}
+
+	/**
+	 * Whether this K-key contains value that should respect decimal settings of the characteristic.
+	 * These value are measured value and its limits.
+	 *
+	 * @return
+	 */
+	public boolean isRespectsCharacteristicDecimalSettings() {
+		return respectsCharacteristicDecimalSettings;
 	}
 
 	@Override
@@ -211,4 +203,84 @@ public final class KKeyMetadata {
 		return true;
 	}
 
+	public static final class KKeyMetadataBuilder {
+		private String columnName;
+		private Class<?> dataType;
+		private Integer length;
+		private IKKeyValueConverter<?> converter;
+		private boolean saveToDb;
+		private boolean respectsCharacteristicDecimalSettings;
+
+		private KKeyMetadataBuilder() {
+		}
+
+		public KKeyMetadataBuilder columnName(String columnName) {
+			this.columnName = columnName;
+			return this;
+		}
+
+		public KKeyMetadataBuilder dataType(Class<?> dataType) {
+			this.dataType = dataType;
+			return this;
+		}
+
+		public <T> KKeyMetadataBuilder dataType(Class<T> dataType, IKKeyValueConverter<T> converter) {
+			this.dataType = dataType;
+			this.converter = converter;
+			return this;
+		}
+
+		public KKeyMetadataBuilder length(Integer length) {
+			this.length = length;
+			return this;
+		}
+
+		public KKeyMetadataBuilder saveToDb(boolean saveToDb) {
+			this.saveToDb = saveToDb;
+			return this;
+		}
+
+		public KKeyMetadataBuilder respectsCharacteristicDecimalSettings(boolean respectsCharacteristicDecimalSettings) {
+			this.respectsCharacteristicDecimalSettings = respectsCharacteristicDecimalSettings;
+			return this;
+		}
+
+		public KKeyMetadata build() {
+			if (converter == null) {
+				converter = createDefaultValueConverter();
+			}
+
+			return new KKeyMetadata(columnName,
+									dataType,
+									length,
+									converter,
+									saveToDb,
+									respectsCharacteristicDecimalSettings);
+		}
+
+		private IKKeyValueConverter<?> createDefaultValueConverter() {
+			if (String.class.equals(dataType) || UUID.class.equals(dataType)) {
+
+				return new StringKKeyValueConverter();
+
+			} else if (Integer.class.equals(dataType)) {
+
+				return new IntegerKKeyValueConverter();
+
+			} else if (BigDecimal.class.equals(dataType)) {
+
+				return new BigDecimalKKeyValueConverter();
+
+			} else if (Date.class.equals(dataType)) {
+
+				return new DateKKeyValueConverter();
+
+			} else {
+
+				throw new IllegalArgumentException("There is no converter defined for data type: " + dataType.getName());
+
+			}
+		}
+
+	}
 }

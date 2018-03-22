@@ -148,6 +148,24 @@ public final class KKey implements Serializable, Comparable<KKey> {
 	}
 
 	/**
+	 * See {@link KKeyMetadata#isRespectsCharacteristicDecimalSettings()}
+	 *
+	 * @return
+	 */
+	public boolean isRespectsCharacteristicDecimalSettings() {
+		if (metadata == null) {
+			metadata = findMetadata();
+		}
+
+		if (metadata == null) {
+			LOG.error("Can't find metadata of k-key: " + key);
+			return false;
+		} else {
+			return metadata.isRespectsCharacteristicDecimalSettings();
+		}
+	}
+
+	/**
 	 * Gets {@link KKeyMetadata metadata} of this K-key
 	 *
 	 * @return
