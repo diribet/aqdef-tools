@@ -266,6 +266,13 @@ public final class KKey implements Serializable, Comparable<KKey> {
 	}
 
 	/**
+	 * @return whether this key represents information for part (dil / teil) and is defined as custom
+	 */
+	public boolean isCustomPartLevel() {
+		return getLevel() == Level.CUSTOM_PART;
+	}
+
+	/**
 	 * @return whether this key represents information for characterstic (znak / merkmal)
 	 */
 	public boolean isCharacteristicLevel() {
@@ -273,10 +280,24 @@ public final class KKey implements Serializable, Comparable<KKey> {
 	}
 
 	/**
+	 * @return whether this key represents information for characterstic (znak / merkmal) and is defined as custom
+	 */
+	public boolean isCustomCharacteristicLevel() {
+		return getLevel() == Level.CUSTOM_CHARACTERISTIC;
+	}
+
+	/**
 	 * @return whether this key represents information for value (hodnota / wertevar)
 	 */
 	public boolean isValueLevel() {
 		return getLevel() == Level.VALUE;
+	}
+
+	/**
+	 * @return whether this key represents information for value (hodnota / wertevar) and is defined as custom
+	 */
+	public boolean isCustomValueLevel() {
+		return getLevel() == Level.CUSTOM_VALUE;
 	}
 
 	/**
