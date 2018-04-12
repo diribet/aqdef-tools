@@ -325,9 +325,7 @@ public final class KKey implements Serializable, Comparable<KKey> {
 	 * @return whether this key represents our custom key
 	 */
 	public boolean isCustom() {
-		Level level = getLevel();
-
-		return level == Level.CUSTOM_VALUE || level == Level.CUSTOM_CHARACTERISTIC || level == Level.CUSTOM_PART;
+		return isCustomPartLevel() || isCustomCharacteristicLevel() || isCustomValueLevel();
 	}
 
 	/**
