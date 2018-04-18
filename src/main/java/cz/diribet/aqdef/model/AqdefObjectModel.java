@@ -39,12 +39,12 @@ import cz.diribet.aqdef.writer.AqdefWriter;
  * </p>
  *
  * @author Vlastimil Dolejs
- * 
+ *
  * @see AqdefParser
  * @see AqdefWriter
  */
 public class AqdefObjectModel {
-	
+
 	//*******************************************
 	// Attributes
 	//*******************************************
@@ -68,8 +68,13 @@ public class AqdefObjectModel {
 			return;
 		}
 
-		PartEntries entriesWithIndex = partEntries.computeIfAbsent(index, i -> new PartEntries(i));
+		PartEntries entriesWithIndex = partEntries.computeIfAbsent(index, PartEntries::new);
 		entriesWithIndex.put(key, value);
+	}
+
+	public void putPartEntries(PartEntries newPartEntries) {
+		PartEntries entriesWithIndex = partEntries.computeIfAbsent(newPartEntries.getIndex(), PartEntries::new);
+		entriesWithIndex.putAll(newPartEntries, true);
 	}
 
 	/**
@@ -87,14 +92,23 @@ public class AqdefObjectModel {
 			return;
 		}
 
+		CharacteristicEntries entriesWithIndex = computeCharacteristicEntriesIfAbsent(characteristicIndex);
+		entriesWithIndex.put(key, value);
+	}
+
+	public void putCharacteristicEntries(CharacteristicEntries newCharacteristicEntries) {
+		CharacteristicIndex characteristicIndex = newCharacteristicEntries.getIndex();
+		CharacteristicEntries entriesWithIndex = computeCharacteristicEntriesIfAbsent(characteristicIndex);
+		entriesWithIndex.putAll(newCharacteristicEntries, true);
+	}
+
+	private CharacteristicEntries computeCharacteristicEntriesIfAbsent(CharacteristicIndex characteristicIndex) {
 		PartIndex partIndex = characteristicIndex.getPartIndex();
 
 		TreeMap<CharacteristicIndex, CharacteristicEntries> entriesWithPartIndex =
 				characteristicEntries.computeIfAbsent(partIndex, i -> new TreeMap<>());
 
-		CharacteristicEntries entriesWithIndex =
-				entriesWithPartIndex.computeIfAbsent(characteristicIndex, i -> new CharacteristicEntries(i));
-		entriesWithIndex.put(key, value);
+		return entriesWithPartIndex.computeIfAbsent(characteristicIndex, CharacteristicEntries::new);
 	}
 
 	/**
@@ -132,7 +146,7 @@ public class AqdefObjectModel {
 				groupEntries.computeIfAbsent(partIndex, i -> new TreeMap<>());
 
 		GroupEntries entriesWithIndex =
-				entriesWithPartIndex.computeIfAbsent(groupIndex, i -> new GroupEntries(i));
+				entriesWithPartIndex.computeIfAbsent(groupIndex, GroupEntries::new);
 		entriesWithIndex.put(key, value);
 	}
 
@@ -141,6 +155,17 @@ public class AqdefObjectModel {
 			return;
 		}
 
+		ValueEntries entriesWithIndex = computeValueEntriesIfAbsent(valueIndex);
+		entriesWithIndex.put(key, value);
+	}
+
+	public void putValueEntries(ValueEntries newValueEntries) {
+		ValueIndex valueIndex = newValueEntries.getIndex();
+		ValueEntries entriesWithIndex = computeValueEntriesIfAbsent(valueIndex);
+		entriesWithIndex.putAll(newValueEntries, true);
+	}
+
+	private ValueEntries computeValueEntriesIfAbsent(ValueIndex valueIndex) {
 		PartIndex partIndex = valueIndex.getPartIndex();
 
 		TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> entriesWithPartIndex =
@@ -151,8 +176,7 @@ public class AqdefObjectModel {
 		TreeMap<ValueIndex, ValueEntries> entriesWithCharacteristicIndex =
 				entriesWithPartIndex.computeIfAbsent(characteristicIndex, i -> new TreeMap<>());
 
-		ValueEntries entriesWithIndex = entriesWithCharacteristicIndex.computeIfAbsent(valueIndex, i -> new ValueEntries(i));
-		entriesWithIndex.put(key, value);
+		return entriesWithCharacteristicIndex.computeIfAbsent(valueIndex, ValueEntries::new);
 	}
 
 	/**
@@ -870,10 +894,10 @@ public class AqdefObjectModel {
 				}
 			});
 		});
-		
+
 		hierarchy = hierarchy.normalize(this);
 	}
-	
+
 	/**
 	 * Returns total number of characteristics of all parts in this object model
 	 *
