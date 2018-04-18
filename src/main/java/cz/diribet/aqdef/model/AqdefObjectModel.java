@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -49,13 +50,13 @@ public class AqdefObjectModel {
 	// Attributes
 	//*******************************************
 
-	private TreeMap<PartIndex, PartEntries> partEntries = new TreeMap<>();
+	private Map<PartIndex, PartEntries> partEntries = newEntriesMap();
 
-	private TreeMap<PartIndex, TreeMap<CharacteristicIndex, CharacteristicEntries>> characteristicEntries = new TreeMap<>();
+	private Map<PartIndex, Map<CharacteristicIndex, CharacteristicEntries>> characteristicEntries = newEntriesMap();
 
-	private TreeMap<PartIndex, TreeMap<GroupIndex, GroupEntries>> groupEntries = new TreeMap<>();
+	private Map<PartIndex, Map<GroupIndex, GroupEntries>> groupEntries = newEntriesMap();
 
-	private TreeMap<PartIndex, TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>>> valueEntries = new TreeMap<>();
+	private Map<PartIndex, Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>>> valueEntries = newEntriesMap();
 
 	private AqdefHierarchy hierarchy = new AqdefHierarchy();
 
@@ -105,8 +106,8 @@ public class AqdefObjectModel {
 	private CharacteristicEntries computeCharacteristicEntriesIfAbsent(CharacteristicIndex characteristicIndex) {
 		PartIndex partIndex = characteristicIndex.getPartIndex();
 
-		TreeMap<CharacteristicIndex, CharacteristicEntries> entriesWithPartIndex =
-				characteristicEntries.computeIfAbsent(partIndex, i -> new TreeMap<>());
+		Map<CharacteristicIndex, CharacteristicEntries> entriesWithPartIndex =
+				characteristicEntries.computeIfAbsent(partIndex, i -> newEntriesMap());
 
 		return entriesWithPartIndex.computeIfAbsent(characteristicIndex, CharacteristicEntries::new);
 	}
@@ -119,7 +120,7 @@ public class AqdefObjectModel {
 	 * @return
 	 */
 	private CharacteristicEntries removeCharacteristicEntries(CharacteristicIndex index) {
-		TreeMap<CharacteristicIndex, CharacteristicEntries> entriesWithPartIndex = characteristicEntries.get(index.getPartIndex());
+		Map<CharacteristicIndex, CharacteristicEntries> entriesWithPartIndex = characteristicEntries.get(index.getPartIndex());
 
 		if (entriesWithPartIndex != null) {
 			CharacteristicEntries removedEntries = entriesWithPartIndex.remove(index);
@@ -142,8 +143,8 @@ public class AqdefObjectModel {
 
 		PartIndex partIndex = groupIndex.getPartIndex();
 
-		TreeMap<GroupIndex, GroupEntries> entriesWithPartIndex =
-				groupEntries.computeIfAbsent(partIndex, i -> new TreeMap<>());
+		Map<GroupIndex, GroupEntries> entriesWithPartIndex =
+				groupEntries.computeIfAbsent(partIndex, i -> newEntriesMap());
 
 		GroupEntries entriesWithIndex =
 				entriesWithPartIndex.computeIfAbsent(groupIndex, GroupEntries::new);
@@ -168,13 +169,13 @@ public class AqdefObjectModel {
 	private ValueEntries computeValueEntriesIfAbsent(ValueIndex valueIndex) {
 		PartIndex partIndex = valueIndex.getPartIndex();
 
-		TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> entriesWithPartIndex =
-				valueEntries.computeIfAbsent(partIndex, i -> new TreeMap<>());
+		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> entriesWithPartIndex =
+				valueEntries.computeIfAbsent(partIndex, i -> newEntriesMap());
 
 		CharacteristicIndex characteristicIndex = valueIndex.getCharacteristicIndex();
 
-		TreeMap<ValueIndex, ValueEntries> entriesWithCharacteristicIndex =
-				entriesWithPartIndex.computeIfAbsent(characteristicIndex, i -> new TreeMap<>());
+		Map<ValueIndex, ValueEntries> entriesWithCharacteristicIndex =
+				entriesWithPartIndex.computeIfAbsent(characteristicIndex, i -> newEntriesMap());
 
 		return entriesWithCharacteristicIndex.computeIfAbsent(valueIndex, ValueEntries::new);
 	}
@@ -186,10 +187,10 @@ public class AqdefObjectModel {
 	 * @return
 	 */
 	private List<ValueEntries> removeValueEntries(CharacteristicIndex index) {
-		TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(index.getPartIndex());
+		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(index.getPartIndex());
 
 		if (entriesWithPartIndex != null) {
-			TreeMap<ValueIndex, ValueEntries> removedValueEntries = entriesWithPartIndex.remove(index);
+			Map<ValueIndex, ValueEntries> removedValueEntries = entriesWithPartIndex.remove(index);
 
 			// cleanup empty entries
 			if (entriesWithPartIndex.isEmpty()) {
@@ -231,7 +232,7 @@ public class AqdefObjectModel {
 	 * @return
 	 */
 	public List<CharacteristicIndex> getCharacteristicIndexes(PartIndex partIndex) {
-		TreeMap<CharacteristicIndex, CharacteristicEntries> entriesWithPartIndex = characteristicEntries.get(partIndex);
+		Map<CharacteristicIndex, CharacteristicEntries> entriesWithPartIndex = characteristicEntries.get(partIndex);
 
 		if (entriesWithPartIndex == null) {
 			return new ArrayList<>();
@@ -245,7 +246,7 @@ public class AqdefObjectModel {
 	}
 
 	public CharacteristicEntries getCharacteristicEntries(CharacteristicIndex characteristicIndex) {
-		TreeMap<CharacteristicIndex, CharacteristicEntries> entriesWithPartIndex = characteristicEntries.get(characteristicIndex.getPartIndex());
+		Map<CharacteristicIndex, CharacteristicEntries> entriesWithPartIndex = characteristicEntries.get(characteristicIndex.getPartIndex());
 
 		if (entriesWithPartIndex == null) {
 			return null;
@@ -260,12 +261,12 @@ public class AqdefObjectModel {
 	 * @return
 	 */
 	public List<ValueIndex> getValueIndexes(CharacteristicIndex characteristicIndex) {
-		TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(characteristicIndex.getPartIndex());
+		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(characteristicIndex.getPartIndex());
 
 		if (entriesWithPartIndex == null) {
 			return new ArrayList<>();
 		} else {
-			TreeMap<ValueIndex, ValueEntries> entriesWithCharacteristicIndex = entriesWithPartIndex.get(characteristicIndex);
+			Map<ValueIndex, ValueEntries> entriesWithCharacteristicIndex = entriesWithPartIndex.get(characteristicIndex);
 
 			if (entriesWithCharacteristicIndex == null) {
 				return new ArrayList<>();
@@ -282,8 +283,8 @@ public class AqdefObjectModel {
 	public List<ValueIndex> getValueIndexes() {
 		List<ValueIndex> allValueIndexes = new ArrayList<>();
 
-		for (TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> entriesOfPart : valueEntries.values()) {
-			for (TreeMap<ValueIndex, ValueEntries> entriesOfCharacteristic : entriesOfPart.values()) {
+		for (Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> entriesOfPart : valueEntries.values()) {
+			for (Map<ValueIndex, ValueEntries> entriesOfCharacteristic : entriesOfPart.values()) {
 				allValueIndexes.addAll(entriesOfCharacteristic.keySet());
 			}
 		}
@@ -296,12 +297,12 @@ public class AqdefObjectModel {
 	}
 
 	public ValueEntries getValueEntries(ValueIndex valueIndex) {
-		TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(valueIndex.getPartIndex());
+		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(valueIndex.getPartIndex());
 
 		if (entriesWithPartIndex == null) {
 			return null;
 		} else {
-			TreeMap<ValueIndex, ValueEntries> entriesWithCharacteristicIndex = entriesWithPartIndex.get(valueIndex.getCharacteristicIndex());
+			Map<ValueIndex, ValueEntries> entriesWithCharacteristicIndex = entriesWithPartIndex.get(valueIndex.getCharacteristicIndex());
 
 			if (entriesWithCharacteristicIndex == null) {
 				return null;
@@ -312,12 +313,12 @@ public class AqdefObjectModel {
 	}
 
 	public List<ValueEntries> getValueEntries(CharacteristicIndex characteristicIndex) {
-		TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(characteristicIndex.getPartIndex());
+		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(characteristicIndex.getPartIndex());
 
 		if (entriesWithPartIndex == null) {
 			return new ArrayList<>();
 		} else {
-			TreeMap<ValueIndex, ValueEntries> entriesWithCharacteristicIndex = entriesWithPartIndex.get(characteristicIndex);
+			Map<ValueIndex, ValueEntries> entriesWithCharacteristicIndex = entriesWithPartIndex.get(characteristicIndex);
 
 			if (entriesWithCharacteristicIndex == null) {
 				return new ArrayList<>();
@@ -329,13 +330,13 @@ public class AqdefObjectModel {
 
 
 	public List<ValueSet> getValueSets(PartIndex partIndex) {
-		TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(partIndex);
+		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(partIndex);
 
 		List<ValueSet> valueSets = new ArrayList<>();
 
-		for (Entry<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> entriesOfCharacteristic : entriesWithPartIndex.entrySet()) {
+		for (Entry<CharacteristicIndex, Map<ValueIndex, ValueEntries>> entriesOfCharacteristic : entriesWithPartIndex.entrySet()) {
 			CharacteristicIndex characteristicIndex = entriesOfCharacteristic.getKey();
-			TreeMap<ValueIndex, ValueEntries> valuesOfCharacteristic = entriesOfCharacteristic.getValue();
+			Map<ValueIndex, ValueEntries> valuesOfCharacteristic = entriesOfCharacteristic.getValue();
 
 			int counter = 0;
 			for (Entry<ValueIndex, ValueEntries> valueEntries : valuesOfCharacteristic.entrySet()) {
@@ -361,7 +362,7 @@ public class AqdefObjectModel {
 	 * @return
 	 */
 	public PartIndex findPartIndexForCharacteristic(int characteristicIndex) {
-		for (TreeMap<CharacteristicIndex, CharacteristicEntries> characteristics : characteristicEntries.values()) {
+		for (Map<CharacteristicIndex, CharacteristicEntries> characteristics : characteristicEntries.values()) {
 			for (CharacteristicIndex characteristic : characteristics.keySet()) {
 				if (characteristic.getCharacteristicIndex() == characteristicIndex) {
 					return characteristic.getPartIndex();
@@ -375,7 +376,7 @@ public class AqdefObjectModel {
 	public Set<CharacteristicIndex> findCharacteristicIndexesForPart(PartIndex partIndex, CharacteristicOfSinglePartPredicate predicate) {
 		Set<CharacteristicIndex> characteristicIndexes = new HashSet<>();
 
-		TreeMap<CharacteristicIndex, CharacteristicEntries> partCharacteristics = characteristicEntries.get(partIndex);
+		Map<CharacteristicIndex, CharacteristicEntries> partCharacteristics = characteristicEntries.get(partIndex);
 
 		if (partCharacteristics != null) {
 			for (CharacteristicEntries entries : partCharacteristics.values()) {
@@ -406,7 +407,7 @@ public class AqdefObjectModel {
 	 */
 	public void forEachCharacteristic(CharacteristicConsumer consumer) {
 		partEntries.forEach((partIndex, part) -> {
-			TreeMap<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
+			Map<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
 
 			if (characteristicsOfPart != null) {
 				characteristicsOfPart.forEach((characteristicIndex, characteristic) -> {
@@ -431,7 +432,7 @@ public class AqdefObjectModel {
 	 * @param consumer
 	 */
 	public void forEachCharacteristic(PartEntries part, CharacteristicOfSinglePartConsumer consumer) {
-		TreeMap<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
+		Map<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
 
 		if (characteristicsOfPart != null) {
 			characteristicsOfPart.forEach((characteristicIndex, characteristic) -> {
@@ -447,7 +448,7 @@ public class AqdefObjectModel {
 	 */
 	public void forEachGroup(GroupConsumer consumer) {
 		partEntries.forEach((partIndex, part) -> {
-			TreeMap<GroupIndex, GroupEntries> groupsOfPart = groupEntries.get(part.getIndex());
+			Map<GroupIndex, GroupEntries> groupsOfPart = groupEntries.get(part.getIndex());
 
 			if (groupsOfPart != null) {
 				groupsOfPart.forEach((groupIndex, group) -> {
@@ -464,7 +465,7 @@ public class AqdefObjectModel {
 	 * @param consumer
 	 */
 	public void forEachGroup(PartEntries part, GroupOfSinglePartConsumer consumer) {
-		TreeMap<GroupIndex, GroupEntries> groupsOfPart = groupEntries.get(part.getIndex());
+		Map<GroupIndex, GroupEntries> groupsOfPart = groupEntries.get(part.getIndex());
 
 		if (groupsOfPart != null) {
 			groupsOfPart.forEach((groupIndex, group) -> {
@@ -480,14 +481,14 @@ public class AqdefObjectModel {
 	 */
 	public void forEachValue(ValueConsumer consumer) {
 		partEntries.forEach((partIndex, part) -> {
-			TreeMap<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
+			Map<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
 
 			if (characteristicsOfPart != null) {
 				characteristicsOfPart.forEach((characteristicIndex, characteristic) -> {
-					TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
+					Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
 
 					if (valuesOfPart != null) {
-						TreeMap<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
+						Map<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
 
 						if (values != null) {
 							values.forEach((valueIndex, value) -> {
@@ -516,14 +517,14 @@ public class AqdefObjectModel {
 	 * @param consumer
 	 */
 	public void forEachValue(PartEntries part, ValueOfSinglePartConsumer consumer) {
-		TreeMap<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
+		Map<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
 
 		if (characteristicsOfPart != null) {
 			characteristicsOfPart.forEach((characteristicIndex, characteristic) -> {
-				TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
+				Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
 
 				if (valuesOfPart != null) {
-					TreeMap<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
+					Map<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
 
 					if (values != null) {
 						values.forEach((valueIndex, value) -> {
@@ -552,10 +553,10 @@ public class AqdefObjectModel {
 	 * @param consumer
 	 */
 	public void forEachValue(PartEntries part, CharacteristicEntries characteristic, ValueOfSingleCharacteristicConsumer consumer) {
-		TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
+		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
 
 		if (valuesOfPart != null) {
-			TreeMap<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
+			Map<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
 
 			if (values != null) {
 				values.forEach((valueIndex, value) -> {
@@ -597,7 +598,7 @@ public class AqdefObjectModel {
 	 */
 	public void filterCharacteristics(CharacteristicPredicate predicate) {
 		partEntries.forEach((partIndex, part) -> {
-			TreeMap<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
+			Map<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
 
 			if (characteristicsOfPart != null) {
 				Iterator<Entry<CharacteristicIndex, CharacteristicEntries>> iterator = characteristicsOfPart.entrySet().iterator();
@@ -626,7 +627,7 @@ public class AqdefObjectModel {
 	 * @param predicate
 	 */
 	public void filterCharacteristics(PartEntries part, CharacteristicOfSinglePartPredicate predicate) {
-		TreeMap<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
+		Map<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
 
 		if (characteristicsOfPart != null) {
 			Iterator<Entry<CharacteristicIndex, CharacteristicEntries>> iterator = characteristicsOfPart.entrySet().iterator();
@@ -653,7 +654,7 @@ public class AqdefObjectModel {
 	 */
 	public void filterGroups(GroupPredicate predicate) {
 		partEntries.forEach((partIndex, part) -> {
-			TreeMap<GroupIndex, GroupEntries> groupsOfPart = groupEntries.get(part.getIndex());
+			Map<GroupIndex, GroupEntries> groupsOfPart = groupEntries.get(part.getIndex());
 
 			if (groupsOfPart != null) {
 				Iterator<Entry<GroupIndex, GroupEntries>> iterator = groupsOfPart.entrySet().iterator();
@@ -675,7 +676,7 @@ public class AqdefObjectModel {
 	 * @param predicate
 	 */
 	public void filterGroups(PartEntries part, GroupOfSinglePartPredicate predicate) {
-		TreeMap<GroupIndex, GroupEntries> groupsOfPart = groupEntries.get(part.getIndex());
+		Map<GroupIndex, GroupEntries> groupsOfPart = groupEntries.get(part.getIndex());
 
 		if (groupsOfPart != null) {
 			Iterator<Entry<GroupIndex, GroupEntries>> iterator = groupsOfPart.entrySet().iterator();
@@ -696,14 +697,14 @@ public class AqdefObjectModel {
 	 */
 	public void filterValues(ValuePredicate predicate) {
 		partEntries.forEach((partIndex, part) -> {
-			TreeMap<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
+			Map<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
 
 			if (characteristicsOfPart != null) {
 				characteristicsOfPart.forEach((characteristicIndex, characteristic) -> {
-					TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
+					Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
 
 					if (valuesOfPart != null) {
-						TreeMap<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
+						Map<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
 
 						if (values != null) {
 							Iterator<Entry<ValueIndex, ValueEntries>> iterator = values.entrySet().iterator();
@@ -730,14 +731,14 @@ public class AqdefObjectModel {
 	 * @param predicate
 	 */
 	public void filterValues(PartEntries part, ValueOfSinglePartPredicate predicate) {
-		TreeMap<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
+		Map<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart = characteristicEntries.get(part.getIndex());
 
 		if (characteristicsOfPart != null) {
 			characteristicsOfPart.forEach((characteristicIndex, characteristic) -> {
-				TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
+				Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
 
 				if (valuesOfPart != null) {
-					TreeMap<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
+					Map<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
 
 					if (values != null) {
 						Iterator<Entry<ValueIndex, ValueEntries>> iterator = values.entrySet().iterator();
@@ -764,10 +765,10 @@ public class AqdefObjectModel {
 	 * @param predicate
 	 */
 	public void filterValues(PartEntries part, CharacteristicEntries characteristic, ValueOfSinglePartPredicate predicate) {
-		TreeMap<CharacteristicIndex, TreeMap<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
+		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
 
 		if (valuesOfPart != null) {
-			TreeMap<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
+			Map<ValueIndex, ValueEntries> values = valuesOfPart.get(characteristic.getIndex());
 
 			if (values != null) {
 				Iterator<Entry<ValueIndex, ValueEntries>> iterator = values.entrySet().iterator();
@@ -922,6 +923,10 @@ public class AqdefObjectModel {
 		forEachValue((part, characteristic, value) -> count.incrementAndGet());
 
 		return count.get();
+	}
+
+	private <K, V> Map<K, V> newEntriesMap() {
+		return new ConcurrentSkipListMap<>();
 	}
 
 	@Override
@@ -1474,7 +1479,7 @@ public class AqdefObjectModel {
 		private final TreeMap<CharacteristicIndex, ValueEntries> valuesOfCharacteristics;
 
 		public ValueSet() {
-			this(new TreeMap<CharacteristicIndex, ValueEntries>());
+			this(new TreeMap<>());
 		}
 
 		public ValueSet(TreeMap<CharacteristicIndex, ValueEntries> valuesOfCharacteristics) {
