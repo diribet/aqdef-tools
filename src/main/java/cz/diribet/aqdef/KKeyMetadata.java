@@ -208,7 +208,7 @@ public final class KKeyMetadata {
 		private Class<?> dataType;
 		private Integer length;
 		private IKKeyValueConverter<?> converter;
-		private boolean saveToDb;
+		private boolean saveToDb = true;
 		private boolean respectsCharacteristicDecimalSettings;
 
 		private KKeyMetadataBuilder() {
