@@ -103,7 +103,7 @@ public class AqdefParser implements AqdefConstants {
 		AqdefObjectModel aqdefObjectModel = new AqdefObjectModel();
 		ParserContext context = new ParserContext();
 
-		int lineIndex = 0;
+		int lineIndex = 1;
 		try (BufferedReader bufferedReader = new BufferedReader(reader)) {
 			String line;
 			while ((line = bufferedReader.readLine()) != null) {
