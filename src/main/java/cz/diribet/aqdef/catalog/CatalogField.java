@@ -149,7 +149,7 @@ public enum CatalogField {
 	K4070(Catalog.GAGE, KKey.of("K4070"), KKeyMetadata.of("PMPRUEFMIT", Integer.class), CatalogFieldType.ID),
 	K4072(Catalog.GAGE, KKey.of("K4072"), KKeyMetadata.of("PMNR", String.class, 40)),
 	K4073(Catalog.GAGE, KKey.of("K4073"), KKeyMetadata.of("PMBEZ", String.class, 80)),
-	K4074(Catalog.GAGE, KKey.of("K4074"), KKeyMetadata.of("PMGRUPPE", Integer.class)), // vazba
+	K4074(Catalog.GAGE, KKey.of("K4074"), KKeyMetadata.of("SMART_PGBEZ", String.class, 80)),
 	K4075(Catalog.GAGE, KKey.of("K4075"), KKeyMetadata.of("PMLETZTDAT", Date.class)),
 	K4076(Catalog.GAGE, KKey.of("K4076"), KKeyMetadata.of("PMNAECHDAT", Date.class)),
 	K4077(Catalog.GAGE, KKey.of("K4077"), KKeyMetadata.of("PMIPADDR", String.class, 30)),
