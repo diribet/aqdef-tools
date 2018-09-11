@@ -764,7 +764,7 @@ public class AqdefObjectModel {
 	 * @param characteristic
 	 * @param predicate
 	 */
-	public void filterValues(PartEntries part, CharacteristicEntries characteristic, ValueOfSinglePartPredicate predicate) {
+	public void filterValues(PartEntries part, CharacteristicEntries characteristic, ValueOfSingleCharacteristicPredicate predicate) {
 		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(part.getIndex());
 
 		if (valuesOfPart != null) {
@@ -777,7 +777,7 @@ public class AqdefObjectModel {
 					Entry<ValueIndex, ValueEntries> entry = iterator.next();
 					ValueEntries value = entry.getValue();
 
-					if (!predicate.test(characteristic, value)) {
+					if (!predicate.test(value)) {
 						iterator.remove();
 					}
 				}
