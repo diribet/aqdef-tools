@@ -279,6 +279,8 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K2144"), KKeyMetadata.of("MEADDFAKREL", BigDecimal.class));
 			keys.put(KKey.of("K2145"), KKeyMetadata.of("MEMULFAKREL", BigDecimal.class));
 			keys.put(KKey.of("K2437"), KKeyMetadata.of("MEPRUEFENDED", Date.class));
+			keys.put(KKey.of("K2630"), KKeyMetadata.of("?K2630?", BigDecimal.class, false));
+			keys.put(KKey.of("K2631"), KKeyMetadata.of("?K2631?", BigDecimal.class, false));
 
 
 			keys.put(KKey.of("K0054"), KKeyMetadata.of("WV0054", String.class, 32));
