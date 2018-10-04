@@ -1420,7 +1420,7 @@ public class AqdefObjectModel {
 		}
 
 		private static KKey validateKey(KKey key) {
-			if (!key.isPartLevel()) {
+			if (!key.isPartLevel() && !key.isCustomPartLevel()) {
 				throw new IllegalArgumentException("K-Key of part type expected, but found: " + key);
 			}
 			return key;
@@ -1434,7 +1434,7 @@ public class AqdefObjectModel {
 		}
 
 		private static KKey validateKey(KKey key) {
-			if (!key.isCharacteristicLevel()) {
+			if (!key.isCharacteristicLevel() && !key.isCustomCharacteristicLevel()) {
 				throw new IllegalArgumentException("K-Key of characteristic type expected, but found: " + key);
 			}
 			return key;
@@ -1448,7 +1448,7 @@ public class AqdefObjectModel {
 		}
 
 		private static KKey validateKey(KKey key) {
-			if (!key.isValueLevel()) {
+			if (!key.isValueLevel() && !key.isCustomValueLevel()) {
 				throw new IllegalArgumentException("K-Key of value type expected, but found: " + key);
 			}
 			return key;
