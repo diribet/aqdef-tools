@@ -236,6 +236,7 @@ public final class KKeyRepository {
 			// surrogate keys of part and characteristic
 			keys.put(KKey.of("K1000"), KKeyMetadata.of("TETEIL", Integer.class, false)); //Teile-Id  (K1000)
 			keys.put(KKey.of("K2000"), KKeyMetadata.of("MEMERKMAL", Integer.class, false));
+			keys.put(KKey.of("K0000"), KKeyMetadata.of("WVWERTNR", Integer.class, false));
 
 			// K1017 is boolean
 			keys.put(KKey.of("K1017"), KKeyMetadata.builder()
