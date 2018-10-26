@@ -785,6 +785,46 @@ public class AqdefObjectModel {
 		}
 	}
 
+	public boolean containsPart(PartEntries part) {
+		Objects.requireNonNull(part);
+		return partEntries.containsKey(part.getIndex());
+	}
+
+	public boolean containsCharacteristic(CharacteristicEntries characteristic) {
+		Objects.requireNonNull(characteristic);
+
+		CharacteristicIndex characteristicIndex = characteristic.getIndex();
+		Map<CharacteristicIndex, CharacteristicEntries> characteristicsOfPart =
+				characteristicEntries.get(characteristicIndex.getPartIndex());
+
+		if (characteristicsOfPart == null) {
+			return false;
+		} else {
+			return characteristicsOfPart.containsKey(characteristicIndex);
+		}
+	}
+
+	public boolean containsValue(ValueEntries value) {
+		Objects.requireNonNull(value);
+
+		ValueIndex valueIndex = value.getIndex();
+
+		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> valuesOfPart = valueEntries.get(valueIndex.getPartIndex());
+
+		if (valuesOfPart == null) {
+			return false;
+		} else {
+			Map<ValueIndex, ValueEntries> valuesOfCharacteristic =
+					valuesOfPart.get(valueIndex.getCharacteristicIndex());
+
+			if (valuesOfCharacteristic == null) {
+				return false;
+			} else {
+				return valuesOfCharacteristic.containsKey(valueIndex);
+			}
+		}
+	}
+
 	/**
 	 * Finds value of the given K-key from any part / characteristic / value.
 	 * <p>
