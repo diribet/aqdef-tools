@@ -14,18 +14,18 @@ public class DateKKeyValueConverter implements IKKeyValueConverter<Date> {
 	private final FastDateFormat outputFormat = FastDateFormat.getInstance("dd.MM.yyyy/HH:mm:ss");
 
 	private final FastDateFormat[] inputFormats = new FastDateFormat[] {
-		FastDateFormat.getInstance("dd.MM.yyyy/HH:mm:ss"),
-		FastDateFormat.getInstance("MM/dd/yyyy/HH:mm:ss"),
-		FastDateFormat.getInstance("yyyy-MM-dd/HH:mm:ss"),
-		FastDateFormat.getInstance("dd.MM.yyyy/HH:mm"),
-		FastDateFormat.getInstance("MM/dd/yyyy/HH:mm"),
-		FastDateFormat.getInstance("yyyy-MM-dd/HH:mm"),
-		FastDateFormat.getInstance("dd.MM.yyyy HH:mm:ss"),
-		FastDateFormat.getInstance("MM/dd/yyyy HH:mm:ss"),
-		FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss"),
-		FastDateFormat.getInstance("dd.MM.yyyy HH:mm"),
-		FastDateFormat.getInstance("MM/dd/yyyy HH:mm"),
-		FastDateFormat.getInstance("yyyy-MM-dd HH:mm")
+		FastDateFormat.getInstance("dd.MM.yy/HH:mm:ss"),
+		FastDateFormat.getInstance("MM/dd/yy/HH:mm:ss"),
+		FastDateFormat.getInstance("yy-MM-dd/HH:mm:ss"),
+		FastDateFormat.getInstance("dd.MM.yy/HH:mm"),
+		FastDateFormat.getInstance("MM/dd/yy/HH:mm"),
+		FastDateFormat.getInstance("yy-MM-dd/HH:mm"),
+		FastDateFormat.getInstance("dd.MM.yy HH:mm:ss"),
+		FastDateFormat.getInstance("MM/dd/yy HH:mm:ss"),
+		FastDateFormat.getInstance("yy-MM-dd HH:mm:ss"),
+		FastDateFormat.getInstance("dd.MM.yy HH:mm"),
+		FastDateFormat.getInstance("MM/dd/yy HH:mm"),
+		FastDateFormat.getInstance("yy-MM-dd HH:mm")
 	};
 
 	@Override
