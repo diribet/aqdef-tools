@@ -227,6 +227,13 @@ public class AqdefObjectModel {
 	}
 
 	/**
+	 * @return all parts in this object model
+	 */
+	public List<PartEntries> getParts() {
+		return new ArrayList<>(partEntries.values());
+	}
+
+	/**
 	 * Returns indexes of all characteristics of a part with the given index.
 	 *
 	 * @return
@@ -256,6 +263,38 @@ public class AqdefObjectModel {
 	}
 
 	/**
+	 * Returns all the characteristics of a part with the given index.
+	 *
+	 * @param partIndex
+	 * @return
+	 */
+	public List<CharacteristicEntries> getCharacteristics(PartIndex partIndex) {
+		Map<CharacteristicIndex, CharacteristicEntries> entriesWithPartIndex = characteristicEntries.get(partIndex);
+
+		if (entriesWithPartIndex == null) {
+			return new ArrayList<>();
+		} else {
+			return new ArrayList<>(entriesWithPartIndex.values());
+		}
+	}
+
+	/**
+	 * Returns all the groups of a part with the given index.
+	 *
+	 * @param partIndex
+	 * @return
+	 */
+	public List<GroupEntries> getGroups(PartIndex partIndex) {
+		Map<GroupIndex, GroupEntries> entriesWithPartIndex = groupEntries.get(partIndex);
+
+		if (entriesWithPartIndex == null) {
+			return new ArrayList<>();
+		} else {
+			return new ArrayList<>(entriesWithPartIndex.values());
+		}
+	}
+
+	/**
 	 * Returns indexes of all values of a characteristics with the given index.
 	 *
 	 * @return
@@ -281,15 +320,11 @@ public class AqdefObjectModel {
 	 * @return
 	 */
 	public List<ValueIndex> getValueIndexes() {
-		List<ValueIndex> allValueIndexes = new ArrayList<>();
-
-		for (Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> entriesOfPart : valueEntries.values()) {
-			for (Map<ValueIndex, ValueEntries> entriesOfCharacteristic : entriesOfPart.values()) {
-				allValueIndexes.addAll(entriesOfCharacteristic.keySet());
-			}
-		}
-
-		return allValueIndexes;
+		return valueEntries.values()
+						   .stream()
+						   .flatMap(e -> e.values().stream())
+						   .flatMap(e -> e.keySet().stream())
+						   .collect(toList());
 	}
 
 	public ValueEntries getValueEntries(int partIndex, int characteristicIndex, int valueIndex) {
@@ -312,7 +347,29 @@ public class AqdefObjectModel {
 		}
 	}
 
+	/**
+	 * @return all the values in this model object
+	 */
+	public List<ValueEntries> getValues() {
+		return valueEntries.values()
+						   .stream()
+						   .flatMap(e -> e.values().stream())
+						   .flatMap(e -> e.values().stream())
+						   .collect(toList());
+	}
+
+	/**
+	 *
+	 * @param characteristicIndex
+	 * @return
+	 * @deprecated use {@link #getValues(CharacteristicIndex)} instead
+	 */
+	@Deprecated
 	public List<ValueEntries> getValueEntries(CharacteristicIndex characteristicIndex) {
+		return getValues(characteristicIndex);
+	}
+
+	public List<ValueEntries> getValues(CharacteristicIndex characteristicIndex) {
 		Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>> entriesWithPartIndex = valueEntries.get(characteristicIndex.getPartIndex());
 
 		if (entriesWithPartIndex == null) {

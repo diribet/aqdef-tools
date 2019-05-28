@@ -1,15 +1,12 @@
-package cz.diribet.aqdef.parser;
-
-import static org.hamcrest.Matchers.*
-import static org.junit.Assert.*
+package cz.diribet.aqdef.parser
 
 import cz.diribet.aqdef.model.AqdefObjectModel
-import cz.diribet.aqdef.model.CharacteristicIndex
-import cz.diribet.aqdef.model.NodeIndex
-import cz.diribet.aqdef.model.PartIndex
 import cz.diribet.aqdef.model.AqdefObjectModel.CharacteristicEntries
 import cz.diribet.aqdef.model.AqdefObjectModel.PartEntries
 import cz.diribet.aqdef.model.AqdefObjectModel.ValueEntries
+import cz.diribet.aqdef.model.CharacteristicIndex
+import cz.diribet.aqdef.model.NodeIndex
+import cz.diribet.aqdef.model.PartIndex
 import spock.lang.Ignore
 import spock.lang.Specification
 
@@ -226,8 +223,8 @@ class AqdefParserTest extends Specification {
 		when:
 			AqdefObjectModel model = parse(dfqWithTwoPartsWithBinaryValuesAtTheEnd)
 
-			def values1 = model.getValueEntries(CharacteristicIndex.of(1, 1))
-			def values2 = model.getValueEntries(CharacteristicIndex.of(2, 2))
+			def values1 = model.getValues(CharacteristicIndex.of(1, 1))
+			def values2 = model.getValues(CharacteristicIndex.of(2, 2))
 
 		then:
 			values1.size() == 2
@@ -238,8 +235,8 @@ class AqdefParserTest extends Specification {
 		when:
 			AqdefObjectModel model = parse(dfqWithTwoPartsWithBinaryValuesAfterEachPart)
 
-			def values1 = model.getValueEntries(CharacteristicIndex.of(1, 1))
-			def values2 = model.getValueEntries(CharacteristicIndex.of(2, 2))
+			def values1 = model.getValues(CharacteristicIndex.of(1, 1))
+			def values2 = model.getValues(CharacteristicIndex.of(2, 2))
 
 		then:
 			values1.size() == 2
@@ -269,8 +266,8 @@ class AqdefParserTest extends Specification {
 		when:
 			AqdefObjectModel model = parse(dfqWithTwoPartsWithValuesAtTheEnd)
 
-			def values1 = model.getValueEntries(CharacteristicIndex.of(1, 1))
-			def values2 = model.getValueEntries(CharacteristicIndex.of(2, 2))
+			def values1 = model.getValues(CharacteristicIndex.of(1, 1))
+			def values2 = model.getValues(CharacteristicIndex.of(2, 2))
 
 		then:
 			values1.size() == 2
@@ -281,8 +278,8 @@ class AqdefParserTest extends Specification {
 		when:
 			AqdefObjectModel model = parse(dfqWithTwoPartsWithValuesAfterEachPart)
 
-			def values1 = model.getValueEntries(CharacteristicIndex.of(1, 1))
-			def values2 = model.getValueEntries(CharacteristicIndex.of(2, 2))
+			def values1 = model.getValues(CharacteristicIndex.of(1, 1))
+			def values2 = model.getValues(CharacteristicIndex.of(2, 2))
 
 		then:
 			values1.size() == 2
