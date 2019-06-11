@@ -11,7 +11,7 @@ If you are not familiar with the AQDEF format, it would be better for you to tak
 AQDEF stands for Advanced Quality Data Exchange Format.
 It is a data format developed by Q-DAS® in cooperation with leading companies of the manufacturing industry.
 
-AQDEF [documentation](http://www.q-das.com/en/service/certification/documents/) could be downloaded from the Q-DAS® website. 
+AQDEF [documentation](https://www.q-das.com/en/service/data-format-aqdef) could be downloaded from the Q-DAS® website. 
 
 ### Motivation behind this project
 
