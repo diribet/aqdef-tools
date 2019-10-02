@@ -136,8 +136,8 @@ public enum CatalogField {
 	K4233(Catalog.ORDINAL_CLASS, KKey.of("K4233"), KKeyMetadata.of("OKBEZ", String.class, 100)),
 	K4234(Catalog.ORDINAL_CLASS, KKey.of("K4234"), KKeyMetadata.of("OKKURZBEZ", String.class, 20)),
 	K4235(Catalog.ORDINAL_CLASS, KKey.of("K4235"), KKeyMetadata.of("OKBEWERT", Integer.class)),
-	K4236(Catalog.ORDINAL_CLASS, KKey.of("K4236"), KKeyMetadata.of("OKSTATE", Integer.class), CatalogFieldType.STATE),
-	K4731(Catalog.ORDINAL_CLASS, KKey.of("K4731"), KKeyMetadata.of("OKRANG", Integer.class)),
+	K4236(Catalog.ORDINAL_CLASS, KKey.of("K4236"), KKeyMetadata.of("OKSTATE", Integer.class)),
+	K4731(Catalog.ORDINAL_CLASS, KKey.of("K4731"), KKeyMetadata.of("OKRANG", Integer.class), CatalogFieldType.STATE),
 	K4732(Catalog.ORDINAL_CLASS, KKey.of("K4732"), KKeyMetadata.of("OKBEMERK", String.class, 200)),
 
 	K4100(Catalog.CONTRACTOR, KKey.of("K4100_ID"), KKeyMetadata.of("AULFDNR", Integer.class), CatalogFieldType.ID),
