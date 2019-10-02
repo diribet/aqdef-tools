@@ -272,7 +272,7 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K1040"), KKeyMetadata.of("?K1040?", Integer.class, 5, false));
 			keys.put(KKey.of("K2008"), KKeyMetadata.of("MEPRUEFORT", Integer.class)); // group type
 			keys.put(KKey.of("K2015"), KKeyMetadata.of("MEGLMITT", Integer.class, 3));
-			keys.put(KKey.of("K2023"), KKeyMetadata.of("?K2023?", Integer.class, 3, false)); //Transformationsart (K2023)
+			keys.put(KKey.of("K2023"), KKeyMetadata.of("METRANSART", Integer.class, 3));
 			keys.put(KKey.of("K2031"), KKeyMetadata.of("MEUPPERMERKMAL", Integer.class, 5));
 			keys.put(KKey.of("K2076"), KKeyMetadata.of("MEPRUEFBEGINND", Date.class));
 			keys.put(KKey.of("K2080"), KKeyMetadata.of("MEMASSN", Integer.class, 5));
@@ -336,7 +336,7 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K8115"), KKeyMetadata.of("?K8115?", BigDecimal.class, false));
 
 			// missing K85xx - they are related to characteristic
-			keys.put(KKey.of("K8503"), KKeyMetadata.of("METRANSART", Integer.class, 3, false));
+			keys.put(KKey.of("K8503"), KKeyMetadata.of("METRANSART", Integer.class, 3));
 			keys.put(KKey.of("K8505"), KKeyMetadata.of("?K8505?", Integer.class, 5, false));
 			keys.put(KKey.of("K8524"), KKeyMetadata.of("?K8524?", BigDecimal.class, false));
 			keys.put(KKey.of("K8525"), KKeyMetadata.of("?K8525?", BigDecimal.class, false));
