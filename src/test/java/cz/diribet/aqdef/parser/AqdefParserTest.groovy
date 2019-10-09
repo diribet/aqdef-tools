@@ -339,7 +339,7 @@ class AqdefParserTest extends Specification {
 
 	def "hierarchy could not be parsed when there are both simple and normal hierarchy (both non-empty)" () {
 		when:
-			AqdefObjectModel model = parse(dfqWithSimpleAndNormalHierarchy)
+			parse(dfqWithSimpleAndNormalHierarchy)
 
 		then:
 			thrown(RuntimeException)
@@ -408,7 +408,7 @@ class AqdefParserTest extends Specification {
 
 	def "value index can be placed only on value k-keys"() {
 		when:
-			AqdefObjectModel model = parse(dfqWithValueIndexPlacedOnCharacteristicKKey)
+			parse(dfqWithValueIndexPlacedOnCharacteristicKKey)
 
 		then:
 			thrown(RuntimeException)
@@ -416,7 +416,7 @@ class AqdefParserTest extends Specification {
 
 	def "invalid index will cause exception"() {
 		when:
-			AqdefObjectModel model = parse(dfqWithInvalidIndex)
+			parse(dfqWithInvalidIndex)
 
 		then:
 			thrown(RuntimeException)
@@ -424,10 +424,54 @@ class AqdefParserTest extends Specification {
 
 	def "empty value index will cause exception"() {
 		when:
-			AqdefObjectModel model = parse(dfqWithEmptyValueIndex)
+			parse(dfqWithEmptyValueIndex)
 
 		then:
 			thrown(RuntimeException)
+	}
+
+	def "binary data line with characteristic separator is parsed"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithCharacteristicSeparatorInBinaryLine)
+
+			ValueEntries value1ofCharacteristic1 = model.getValueEntries(1, 1, 1)
+			ValueEntries value1ofCharacteristic2 = model.getValueEntries(1, 2, 1)
+
+		then:
+			value1ofCharacteristic1.getValue("K0001") == 1
+			value1ofCharacteristic2.getValue("K0001") == 2
+	}
+
+	def "binary data line with value separator is parsed"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithValueSeparatorInBinaryLine)
+			ValueEntries value1ofCharacteristic1 = model.getValueEntries(1, 1, 1)
+
+		then:
+			value1ofCharacteristic1.getValue("K0001") == 10
+			value1ofCharacteristic1.getValue("K0002") == 0
+			value1ofCharacteristic1.getValue("K0004") == Date.parse("dd.MM.yyyy HH:mm:ss", "1.1.2014 10:30:59")
+	}
+
+	def "binary data line with single measured value is parsed"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithSingleValueWithoutAnySeparatorInBinaryLine)
+			ValueEntries value1ofCharacteristic1 = model.getValueEntries(1, 1, 1)
+
+		then:
+			value1ofCharacteristic1.getValue("K0001") == 10.6
+	}
+
+	def "binary data line with single measured value in non-numeric format is ignored"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithNonNumericValueWithoutAnySeparatorInBinaryLine)
+			ValueEntries value1ofCharacteristic1 = model.getValueEntries(1, 1, 1)
+
+		then:
+			noExceptionThrown()
+
+		and:
+			value1ofCharacteristic1 == null
 	}
 
 	def parse(String dfq) {
@@ -767,4 +811,34 @@ class AqdefParserTest extends Specification {
 		1001.01.2014/00:00:00
 		K0014/1/ partId1
 	"""
+
+	def dfqWithCharacteristicSeparatorInBinaryLine = """
+		K0100 1
+		K1001/1 part1
+		K2001/1 characteristic1
+		K2001/2 characteristic2
+		12
+	"""
+
+	def dfqWithValueSeparatorInBinaryLine = """
+		K0100 1
+		K1001/1 part1
+		K2001/1 characteristic1
+		10001.01.2014/10:30:59
+	"""
+
+	def dfqWithSingleValueWithoutAnySeparatorInBinaryLine = """
+		K0100 1
+		K1001/1 part1
+		K2001/1 characteristic1
+		10.6
+	"""
+
+	def dfqWithNonNumericValueWithoutAnySeparatorInBinaryLine = """
+		K0100 1
+		K1001/1 part1
+		K2001/1 characteristic1
+		10Text
+	"""
+
 }

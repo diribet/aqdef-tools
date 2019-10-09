@@ -11,6 +11,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,13 +27,19 @@ import cz.diribet.aqdef.AqdefValidityException;
 import cz.diribet.aqdef.KKey;
 import cz.diribet.aqdef.KKeyMetadata;
 import cz.diribet.aqdef.KKeyRepository;
+import cz.diribet.aqdef.convert.BigDecimalKKeyValueConverter;
 import cz.diribet.aqdef.convert.IKKeyValueConverter;
+import cz.diribet.aqdef.convert.KKeyValueConversionException;
 import cz.diribet.aqdef.model.AqdefObjectModel;
 import cz.diribet.aqdef.model.AqdefObjectModel.CharacteristicEntries;
 import cz.diribet.aqdef.model.CharacteristicIndex;
 import cz.diribet.aqdef.model.GroupIndex;
 import cz.diribet.aqdef.model.PartIndex;
 import cz.diribet.aqdef.model.ValueIndex;
+import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 /**
  * Parses {@link AqdefObjectModel} from a AQDEF content (file or other data source).
@@ -41,9 +48,6 @@ import cz.diribet.aqdef.model.ValueIndex;
  *
  */
 public class AqdefParser implements AqdefConstants {
-	//*******************************************
-	// Attributes
-	//*******************************************
 
 	private static final Logger LOG = LoggerFactory.getLogger(AqdefParser.class);
 
@@ -67,17 +71,9 @@ public class AqdefParser implements AqdefConstants {
 
 	private final KKeyRepository kKeyRepository;
 
-	//*******************************************
-	// Constructors
-	//*******************************************
-
 	public AqdefParser() {
 		this.kKeyRepository = KKeyRepository.getInstance();
 	}
-
-	//*******************************************
-	// Methods
-	//*******************************************
 
 	public AqdefObjectModel parse(String content) throws IOException {
 		return parse(new StringReader(content));
@@ -104,8 +100,10 @@ public class AqdefParser implements AqdefConstants {
 		ParserContext context = new ParserContext();
 
 		int lineIndex = 1;
+
 		try (BufferedReader bufferedReader = new BufferedReader(reader)) {
 			String line;
+
 			while ((line = bufferedReader.readLine()) != null) {
 				context.setCurrentLine(lineIndex);
 
@@ -132,8 +130,10 @@ public class AqdefParser implements AqdefConstants {
 	private void parseLine(String line, AqdefObjectModel aqdefObjectModel, ParserContext context) {
 		if (isKKeyLine(line)) {
 			parseKKeyLine(line, aqdefObjectModel, context);
+
 		} else if (isBinaryDataLine(line)) {
 			parseBinaryDataLine(line, aqdefObjectModel, context);
+
 		} else {
 			LOG.warn("{} Invalid line format. This line will be discarded. Line content: {}", lineLogContext(context), line);
 		}
@@ -144,7 +144,22 @@ public class AqdefParser implements AqdefConstants {
 	}
 
 	private boolean isBinaryDataLine(String line) {
-		return line.indexOf(MEASURED_VALUES_DATA_SEPARATOR) >= 0;
+		if (line.contains(MEASURED_VALUES_CHARACTERISTIC_SEPARATOR) ||
+			line.contains(MEASURED_VALUES_DATA_SEPARATOR)) {
+
+			return true;
+		}
+
+		try {
+			// line with a single measured value
+			new BigDecimalKKeyValueConverter().convert(line);
+			return true;
+
+		} catch (KKeyValueConversionException e) {
+			// ignore
+		}
+
+		return false;
 	}
 
 	private void parseKKeyLine(String line, AqdefObjectModel aqdefObjectModel, ParserContext context) {
@@ -156,24 +171,30 @@ public class AqdefParser implements AqdefConstants {
 		KKey kKey = KKey.of(key);
 
 		boolean hasIndex = false;
+
 		if (line.length() > 5) {
 			hasIndex = line.charAt(5) == '/';
 		}
 
 		int firstSpaceIndex = line.indexOf(" ", 5);
+
 		if (firstSpaceIndex == -1) {
 			firstSpaceIndex = line.length();
 		}
 
 		Integer index = 1;
 		Integer valueIndexNumber = null;
+
 		if (hasIndex) {
 			String indexString = line.substring(6, firstSpaceIndex);
+
 			if (StringUtils.isNotBlank(indexString)) {
 				int valueIndexSeparatorPosition = indexString.indexOf("/");
+
 				if (valueIndexSeparatorPosition == -1) {
 					try {
 						index = Integer.valueOf(indexString);
+
 					} catch (NumberFormatException e) {
 						throw new AqdefValidityException("K-key index is invalid: " + indexString, e);
 					}
@@ -182,6 +203,7 @@ public class AqdefParser implements AqdefConstants {
 						try {
 							index = Integer.valueOf(indexString.substring(0, valueIndexSeparatorPosition));
 							valueIndexNumber = Integer.valueOf(indexString.substring(valueIndexSeparatorPosition + 1));
+
 						} catch (NumberFormatException e) {
 							throw new AqdefValidityException("K-key index is invalid: " + indexString, e);
 						}
@@ -193,10 +215,11 @@ public class AqdefParser implements AqdefConstants {
 		}
 
 		String valueString = line.substring(firstSpaceIndex).trim();
-
 		Object value;
+
 		try {
 			value = convertValue(kKey, valueString, context);
+
 		} catch (UnknownKKeyException | ValueConversionException e) {
 			//TODO: 2016/04/11 - vlasta: we should provide information that parsed AqdefObjectModel doesn't contain all data?
 			value = null;
@@ -207,33 +230,34 @@ public class AqdefParser implements AqdefConstants {
 		}
 
 		if (kKey.isPartLevel()) {
-
 			PartIndex partIndex = PartIndex.of(index);
 			aqdefObjectModel.putPartEntry(kKey, partIndex, value);
 
 			context.setCurrentPartIndex(partIndex);
 
 		} else if (kKey.isCharacteristicLevel()) {
-
 			PartIndex partIndex;
+
 			if (index == 0) {
 				partIndex = PartIndex.of(0);
+
 			} else {
 				partIndex = context.getCurrentPartIndex();
+
 				if (partIndex == null || partIndex.getIndex() == null || partIndex.getIndex() == 0) {
 					// no part k-key found before this characteristic - add it to the first part
 					partIndex = PartIndex.of(1);
 				}
 			}
 			CharacteristicIndex characteristicIndex = CharacteristicIndex.of(partIndex, index);
-
 			aqdefObjectModel.putCharacteristicEntry(kKey, characteristicIndex, value);
 
 		} else if (kKey.isGroupLevel()) {
-
 			PartIndex partIndex;
+
 			if (index == 0) {
 				partIndex = PartIndex.of(0);
+
 			} else {
 				partIndex = context.getCurrentPartIndex();
 				if (partIndex == null || partIndex.getIndex() == null || partIndex.getIndex() == 0) {
@@ -242,24 +266,27 @@ public class AqdefParser implements AqdefConstants {
 				}
 			}
 			GroupIndex groupIndex = GroupIndex.of(partIndex, index);
-
 			aqdefObjectModel.putGroupEntry(kKey, groupIndex, value);
 
 		} else if (kKey.isValueLevel()) {
-
 			PartIndex partIndex;
+
 			if (index == 0) {
 				partIndex = PartIndex.of(0);
+
 			} else {
 				partIndex = aqdefObjectModel.findPartIndexForCharacteristic(index);
+
 				if (partIndex == null) {
 					throw new AqdefValidityException("Characteristic with index " + index + " was not found. Can't parse value.");
 				}
 			}
 			CharacteristicIndex characteristicIndex = CharacteristicIndex.of(partIndex, index);
 			ValueIndex valueIndex;
+
 			if (valueIndexNumber == null) {
 				valueIndex = context.getValueIndexCounter().getIndex(characteristicIndex, kKey);
+
 			} else {
 				valueIndex = ValueIndex.of(characteristicIndex, valueIndexNumber);
 			}
@@ -267,13 +294,10 @@ public class AqdefParser implements AqdefConstants {
 			aqdefObjectModel.putValueEntry(kKey, valueIndex, value);
 
 		} else if (kKey.isHierarchyLevel() || kKey.isSimpleHierarchyLevel()) {
-
 			aqdefObjectModel.putHierarchyEntry(kKey, index, value);
 
 		} else {
-
 			LOG.warn("{} Unknown level of k-key {}. Key will be ignored! ", lineLogContext(context), kKey);
-
 		}
 	}
 
@@ -303,6 +327,7 @@ public class AqdefParser implements AqdefConstants {
 		}
 
 		KKeyMetadata kKeyMetadata = kKeyRepository.getMetadataFor(key);
+
 		if (kKeyMetadata == null) {
 			LOG.warn("{} Unknown k-key: {}. Value will be discarded.", lineLogContext(context), key);
 			throw new UnknownKKeyException(key);
@@ -311,7 +336,6 @@ public class AqdefParser implements AqdefConstants {
 		IKKeyValueConverter<?> converter = kKeyMetadata.getConverter();
 
 		try {
-
 			return converter.convert(valueString);
 
 		} catch (Throwable e) {
@@ -324,55 +348,66 @@ public class AqdefParser implements AqdefConstants {
 		String[] characteristicPortions = line.split(MEASURED_VALUES_CHARACTERISTIC_SEPARATOR);
 
 		int characteristicIntIndex = 1;
+
 		for (String characteristicPortion : characteristicPortions) {
 			String[] dataPortions = characteristicPortion.split(MEASURED_VALUES_DATA_SEPARATOR);
 
 			PartIndex partIndex = aqdefObjectModel.findPartIndexForCharacteristic(characteristicIntIndex);
+
 			if (partIndex == null) {
 				throw new AqdefValidityException("Characteristic with index " + characteristicIntIndex + " was not found. Can't parse value.");
 			}
+
 			CharacteristicIndex characteristicIndex = CharacteristicIndex.of(partIndex, characteristicIntIndex);
 
 			// recognize binary value format for characterstic type
 			Boolean isAttributeCharacteristic = null;
 			CharacteristicEntries characteristicEntries = aqdefObjectModel.getCharacteristicEntries(characteristicIndex);
+
 			if (characteristicEntries != null) {
 				Integer characteristicType = characteristicEntries.getValue("K2004");
 
 				if (characteristicType != null) {
-					if (characteristicType == 1 || characteristicType == 5 || characteristicType == 6) { // 1 - attribute / 5, 6 - error log sheet
-						isAttributeCharacteristic = true;
-					} else {
-						isAttributeCharacteristic = false;
+					switch (characteristicType) {
+						case 1:
+						case 5:
+						case 6:
+							// 1 - attribute / 5, 6 - error log sheet
+							isAttributeCharacteristic = true;
+							break;
+
+						default:
+							isAttributeCharacteristic = false;
 					}
 				}
 			}
 
-			// if the information about characteristic type is not available, then try to guess it from binary portion count
+			// if the information about characteristic type is not available,
+			// then try to guess it from binary portion count
 			if (isAttributeCharacteristic == null) {
-				isAttributeCharacteristic = dataPortions.length > 10; // attribute values has more than 10 portions
+
+				// attribute values has more than 10 portions
+				isAttributeCharacteristic = dataPortions.length > 10;
 			}
 
-			String[] dataPortionKeys;
-			if (isAttributeCharacteristic) {
-				dataPortionKeys = BINARY_ATTRIBUTE_VALUE_PORTIONS;
-			} else {
-				dataPortionKeys = BINARY_VALUE_PORTIONS;
-			}
+			String[] dataPortionKeys = isAttributeCharacteristic
+					? BINARY_ATTRIBUTE_VALUE_PORTIONS
+					: BINARY_VALUE_PORTIONS;
 
 			for (int i = 0; i < dataPortions.length; i++) {
 				String dataPortion = dataPortions[i];
 				String key = dataPortionKeys[i];
 
-				if (key == IGNORED_BINARY_KEY) {
+				if (IGNORED_BINARY_KEY.equals(key)) {
 					continue;
 				}
 
 				KKey kKey = KKey.of(key);
-
 				Object value;
+
 				try {
 					value = convertValue(kKey, dataPortion, context);
+
 				} catch (UnknownKKeyException | ValueConversionException e) {
 					//TODO: 2016/04/11 - vlasta: we should provide information that parsed AqdefObjectModel doesn't contain all data?
 					value = null;
@@ -380,7 +415,6 @@ public class AqdefParser implements AqdefConstants {
 
 				if (value != null) {
 					ValueIndex valueIndex = context.getValueIndexCounter().getIndex(characteristicIndex, kKey);
-
 					aqdefObjectModel.putValueEntry(kKey, valueIndex, value);
 				}
 			}
@@ -390,7 +424,7 @@ public class AqdefParser implements AqdefConstants {
 	}
 
 	private String lineLogContext(ParserContext context) {
-		return new StringBuilder().append("Line ").append(context.getCurrentLine()).append(":").toString();
+		return "Line " + context.getCurrentLine() + ":";
 	}
 
 	private InputStream createFileInputStream(File file, String encoding) throws FileNotFoundException {
@@ -403,25 +437,17 @@ public class AqdefParser implements AqdefConstants {
 		return inputStream;
 	}
 
-	//*******************************************
-	// Inner classes
-	//*******************************************
-
 	/**
 	 * @author Vlastimil Dolejs
 	 *
 	 */
 	private static class ValueIndexCounter {
+
 		private final Map<CharacteristicIndex, Set<KKey>> keys = new HashMap<>();
 		private final Map<CharacteristicIndex, Integer> indexes = new HashMap<>();
 
-		public ValueIndex getIndex(CharacteristicIndex characteristicIndex, KKey key) {
-			Set<KKey> keysOfCurrentValue = keys.get(characteristicIndex);
-
-			if (keysOfCurrentValue == null) {
-				keysOfCurrentValue = Sets.newHashSet();
-				keys.put(characteristicIndex, keysOfCurrentValue);
-			}
+		ValueIndex getIndex(CharacteristicIndex characteristicIndex, KKey key) {
+			Set<KKey> keysOfCurrentValue = keys.computeIfAbsent(characteristicIndex, k -> new HashSet<>());
 
 			Integer currentIndex = indexes.get(characteristicIndex);
 			currentIndex = currentIndex == null ? 1 : currentIndex;
@@ -442,38 +468,19 @@ public class AqdefParser implements AqdefConstants {
 	 * @author Vlastimil Dolejs
 	 *
 	 */
+	@Getter
+	@Setter
 	private static class ParserContext {
+
 		private int currentLine;
 		private PartIndex currentPartIndex;
 		private final ValueIndexCounter valueIndexCounter = new ValueIndexCounter();
 
-		public int getCurrentLine() {
-			return currentLine;
-		}
-
-		public void setCurrentLine(int currentLine) {
-			this.currentLine = currentLine;
-		}
-
-		public PartIndex getCurrentPartIndex() {
-			return currentPartIndex;
-		}
-
-		public void setCurrentPartIndex(PartIndex currentPartIndex) {
-			this.currentPartIndex = currentPartIndex;
-		}
-
-		public ValueIndexCounter getValueIndexCounter() {
-			return valueIndexCounter;
-		}
 	}
 
-	//*******************************************
-	// Exceptions
-	//*******************************************
-
 	private static class DfqParserException extends RuntimeException {
-		public DfqParserException(ParserContext context, Throwable cause) {
+
+		DfqParserException(ParserContext context, Throwable cause) {
 			super(message(context, cause), cause);
 		}
 
@@ -488,45 +495,28 @@ public class AqdefParser implements AqdefConstants {
 		}
 	}
 
-	@SuppressWarnings("unused")
+	@RequiredArgsConstructor
+	@Getter
 	private static class UnknownKKeyException extends Exception {
 		private final KKey key;
-
-		public UnknownKKeyException(KKey key) {
-			super();
-			this.key = key;
-		}
-
-		public KKey getKey() {
-			return key;
-		}
-
 	}
 
-	@SuppressWarnings("unused")
+	@Getter
 	private static class ValueConversionException extends Exception {
+
 		private final String value;
 		private final KKey key;
 		private final IKKeyValueConverter<?> converter;
 
-		public ValueConversionException(String value, KKey key, IKKeyValueConverter<?> converter, Throwable cause) {
+		ValueConversionException(String value,
+		                         KKey key,
+		                         IKKeyValueConverter<?> converter,
+		                         Throwable cause) {
 			super(cause);
 
 			this.value = value;
 			this.key = key;
 			this.converter = converter;
-		}
-
-		public String getValue() {
-			return value;
-		}
-
-		public KKey getKey() {
-			return key;
-		}
-
-		public IKKeyValueConverter<?> getConverter() {
-			return converter;
 		}
 
 	}
