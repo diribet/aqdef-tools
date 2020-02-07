@@ -23,6 +23,11 @@ import org.apache.commons.collections4.MapUtils;
 import cz.diribet.aqdef.KKey;
 import cz.diribet.aqdef.parser.AqdefParser;
 import cz.diribet.aqdef.writer.AqdefWriter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 /**
  * Object model of AQDEF content.
@@ -44,6 +49,7 @@ import cz.diribet.aqdef.writer.AqdefWriter;
  * @see AqdefParser
  * @see AqdefWriter
  */
+@EqualsAndHashCode
 public class AqdefObjectModel {
 
 	//*******************************************
@@ -51,13 +57,12 @@ public class AqdefObjectModel {
 	//*******************************************
 
 	private Map<PartIndex, PartEntries> partEntries = newEntriesMap();
-
 	private Map<PartIndex, Map<CharacteristicIndex, CharacteristicEntries>> characteristicEntries = newEntriesMap();
-
 	private Map<PartIndex, Map<GroupIndex, GroupEntries>> groupEntries = newEntriesMap();
-
 	private Map<PartIndex, Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>>> valueEntries = newEntriesMap();
 
+	@Getter
+	@Setter
 	private AqdefHierarchy hierarchy = new AqdefHierarchy();
 
 	//*******************************************
@@ -640,6 +645,8 @@ public class AqdefObjectModel {
 			if (!predicate.test(part)) {
 				iterator.remove();
 
+				hierarchy.removeHierarchyForPart(partIndex);
+
 				// remove characteristics and values for that part
 				characteristicEntries.remove(partIndex);
 				valueEntries.remove(partIndex);
@@ -667,6 +674,7 @@ public class AqdefObjectModel {
 
 					if (!predicate.test(part, characteristic)) {
 						iterator.remove();
+						hierarchy.removeHierarchyForCharacteristic(characteristicIndex);
 
 						// remove values for that characteristic
 						removeValueEntries(characteristicIndex);
@@ -696,6 +704,7 @@ public class AqdefObjectModel {
 
 				if (!predicate.test(characteristic)) {
 					iterator.remove();
+					hierarchy.removeHierarchyForCharacteristic(characteristicIndex);
 
 					// remove values for that characteristic
 					removeValueEntries(characteristicIndex);
@@ -715,11 +724,15 @@ public class AqdefObjectModel {
 
 			if (groupsOfPart != null) {
 				Iterator<Entry<GroupIndex, GroupEntries>> iterator = groupsOfPart.entrySet().iterator();
+
 				while (iterator.hasNext()) {
-					GroupEntries group = iterator.next().getValue();
+					Entry<GroupIndex, GroupEntries> entry = iterator.next();
+					GroupIndex groupIndex = entry.getKey();
+					GroupEntries group = entry.getValue();
 
 					if (!predicate.test(part, group)) {
 						iterator.remove();
+						hierarchy.removeHierarchyForGroup(groupIndex);
 					}
 				}
 			}
@@ -737,11 +750,15 @@ public class AqdefObjectModel {
 
 		if (groupsOfPart != null) {
 			Iterator<Entry<GroupIndex, GroupEntries>> iterator = groupsOfPart.entrySet().iterator();
+
 			while (iterator.hasNext()) {
-				GroupEntries group = iterator.next().getValue();
+				Entry<GroupIndex, GroupEntries> entry = iterator.next();
+				GroupIndex groupIndex = entry.getKey();
+				GroupEntries group = entry.getValue();
 
 				if (!predicate.test(group)) {
 					iterator.remove();
+					hierarchy.removeHierarchyForGroup(groupIndex);
 				}
 			}
 		}
@@ -894,7 +911,6 @@ public class AqdefObjectModel {
 	 */
 	public Object getAnyValueOf(KKey key) {
 		if (key.isPartLevel()) {
-
 			return partEntries.values().stream().findAny().map((entries) -> entries.getValue(key)).orElse(null);
 
 		} else if (key.isCharacteristicLevel()) {
@@ -1026,161 +1042,87 @@ public class AqdefObjectModel {
 		return new ConcurrentSkipListMap<>();
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((characteristicEntries == null) ? 0 : characteristicEntries.hashCode());
-		result = prime * result + ((groupEntries == null) ? 0 : groupEntries.hashCode());
-		result = prime * result + ((hierarchy == null) ? 0 : hierarchy.hashCode());
-		result = prime * result + ((partEntries == null) ? 0 : partEntries.hashCode());
-		result = prime * result + ((valueEntries == null) ? 0 : valueEntries.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof AqdefObjectModel)) {
-			return false;
-		}
-		AqdefObjectModel other = (AqdefObjectModel) obj;
-		if (characteristicEntries == null) {
-			if (other.characteristicEntries != null) {
-				return false;
-			}
-		} else if (!characteristicEntries.equals(other.characteristicEntries)) {
-			return false;
-		}
-		if (groupEntries == null) {
-			if (other.groupEntries != null) {
-				return false;
-			}
-		} else if (!groupEntries.equals(other.groupEntries)) {
-			return false;
-		}
-		if (hierarchy == null) {
-			if (other.hierarchy != null) {
-				return false;
-			}
-		} else if (!hierarchy.equals(other.hierarchy)) {
-			return false;
-		}
-		if (partEntries == null) {
-			if (other.partEntries != null) {
-				return false;
-			}
-		} else if (!partEntries.equals(other.partEntries)) {
-			return false;
-		}
-		if (valueEntries == null) {
-			if (other.valueEntries != null) {
-				return false;
-			}
-		} else if (!valueEntries.equals(other.valueEntries)) {
-			return false;
-		}
-		return true;
-	}
-
-	//*******************************************
-	// Getters / setters
-	//*******************************************
-
-	public AqdefHierarchy getHierarchy() {
-		return hierarchy;
-	}
-
-	public void setHierarchy(AqdefHierarchy hierarchy) {
-		this.hierarchy = hierarchy;
-	}
-
 	//*******************************************
 	// Inner classes
 	//*******************************************
 
 	@FunctionalInterface
-	public static interface PartConsumer {
+	public interface PartConsumer {
 		void accept(PartEntries part);
 	}
 
 	@FunctionalInterface
-	public static interface CharacteristicConsumer {
+	public interface CharacteristicConsumer {
 		void accept(PartEntries part, CharacteristicEntries characteristic);
 	}
 
 	@FunctionalInterface
-	public static interface CharacteristicOfSinglePartConsumer {
+	public interface CharacteristicOfSinglePartConsumer {
 		void accept(CharacteristicEntries characteristic);
 	}
 
 	@FunctionalInterface
-	public static interface GroupConsumer {
+	public interface GroupConsumer {
 		void accept(PartEntries part, GroupEntries characteristic);
 	}
 
 	@FunctionalInterface
-	public static interface GroupOfSinglePartConsumer {
+	public interface GroupOfSinglePartConsumer {
 		void accept(GroupEntries characteristic);
 	}
 
 	@FunctionalInterface
-	public static interface ValueConsumer {
+	public interface ValueConsumer {
 		void accept(PartEntries part, CharacteristicEntries characteristic, ValueEntries value);
 	}
 
 	@FunctionalInterface
-	public static interface ValueOfSinglePartConsumer {
+	public interface ValueOfSinglePartConsumer {
 		void accept(CharacteristicEntries characteristic, ValueEntries value);
 	}
 
 	@FunctionalInterface
-	public static interface ValueOfSingleCharacteristicConsumer {
+	public interface ValueOfSingleCharacteristicConsumer {
 		void accept(ValueEntries value);
 	}
 
 	@FunctionalInterface
-	public static interface PartPredicate {
+	public interface PartPredicate {
 		boolean test(PartEntries part);
 	}
 
 	@FunctionalInterface
-	public static interface CharacteristicPredicate {
+	public interface CharacteristicPredicate {
 		boolean test(PartEntries part, CharacteristicEntries characteristic);
 	}
 
 	@FunctionalInterface
-	public static interface CharacteristicOfSinglePartPredicate {
+	public interface CharacteristicOfSinglePartPredicate {
 		boolean test(CharacteristicEntries characteristic);
 	}
 
 	@FunctionalInterface
-	public static interface GroupPredicate {
+	public interface GroupPredicate {
 		boolean test(PartEntries part, GroupEntries group);
 	}
 
 	@FunctionalInterface
-	public static interface GroupOfSinglePartPredicate {
+	public interface GroupOfSinglePartPredicate {
 		boolean test(GroupEntries group);
 	}
 
 	@FunctionalInterface
-	public static interface ValuePredicate {
+	public interface ValuePredicate {
 		boolean test(PartEntries part, CharacteristicEntries characteristic, ValueEntries value);
 	}
 
 	@FunctionalInterface
-	public static interface ValueOfSinglePartPredicate {
+	public interface ValueOfSinglePartPredicate {
 		boolean test(CharacteristicEntries characteristic, ValueEntries value);
 	}
 
 	@FunctionalInterface
-	public static interface ValueOfSingleCharacteristicPredicate {
+	public interface ValueOfSingleCharacteristicPredicate {
 		boolean test(ValueEntries value);
 	}
 
@@ -1284,14 +1226,11 @@ public class AqdefObjectModel {
 
 	}
 
+	@Data
+	@EqualsAndHashCode(callSuper = true)
 	public static abstract class Entries<E extends AbstractEntry<I>, I> extends HashMap<KKey, E> implements IHasKKeyValues {
 
 		private final I index;
-
-		public Entries(I index) {
-			super();
-			this.index = index;
-		}
 
 		public void put(String key, Object value) {
 			put(KKey.of(key), value);
@@ -1354,9 +1293,9 @@ public class AqdefObjectModel {
 
 			if (entry == null) {
 				return null;
-			} else {
-				return (T) entry.getValue();
 			}
+
+			return (T) entry.getValue();
 		}
 
 		public E remove(String key) {
@@ -1365,10 +1304,6 @@ public class AqdefObjectModel {
 
 		public E remove(KKey key) {
 			return super.remove(key);
-		}
-
-		public I getIndex() {
-			return index;
 		}
 
 		public void forEachEntry(Consumer<E> action) {
@@ -1385,62 +1320,14 @@ public class AqdefObjectModel {
 		 */
 		public abstract Entries<E, I> withIndex(I index);
 
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = super.hashCode();
-			result = prime * result + ((index == null) ? 0 : index.hashCode());
-			return result;
-		}
-
-		@SuppressWarnings("rawtypes")
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (!super.equals(obj)) {
-				return false;
-			}
-			if (!(obj instanceof Entries)) {
-				return false;
-			}
-			Entries other = (Entries) obj;
-			if (index == null) {
-				if (other.index != null) {
-					return false;
-				}
-			} else if (!index.equals(other.index)) {
-				return false;
-			}
-			return true;
-		}
-
 	}
 
+	@Data
 	public static abstract class AbstractEntry<I> {
+
 		private final KKey key;
 		private final I index;
 		private final Object value;
-
-		public AbstractEntry(KKey key, I index, Object value) {
-			super();
-			this.key = key;
-			this.index = index;
-			this.value = value;
-		}
-
-		public KKey getKey() {
-			return key;
-		}
-
-		public I getIndex() {
-			return index;
-		}
-
-		public Object getValue() {
-			return value;
-		}
 
 		/**
 		 * Whether this entry has given key.
@@ -1454,58 +1341,7 @@ public class AqdefObjectModel {
 
 		@Override
 		public String toString() {
-			if (value == null) {
-				return "null";
-			} else {
-				return value.toString();
-			}
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((index == null) ? 0 : index.hashCode());
-			result = prime * result + ((key == null) ? 0 : key.hashCode());
-			result = prime * result + ((value == null) ? 0 : value.hashCode());
-			return result;
-		}
-
-		@SuppressWarnings("rawtypes")
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (!(obj instanceof AbstractEntry)) {
-				return false;
-			}
-			AbstractEntry other = (AbstractEntry) obj;
-			if (index == null) {
-				if (other.index != null) {
-					return false;
-				}
-			} else if (!index.equals(other.index)) {
-				return false;
-			}
-			if (key == null) {
-				if (other.key != null) {
-					return false;
-				}
-			} else if (!key.equals(other.key)) {
-				return false;
-			}
-			if (value == null) {
-				if (other.value != null) {
-					return false;
-				}
-			} else if (!value.equals(other.value)) {
-				return false;
-			}
-			return true;
+			return (value == null) ? "null" : value.toString();
 		}
 
 	}
@@ -1572,16 +1408,13 @@ public class AqdefObjectModel {
 	 * @author Vlastimil Dolejs
 	 *
 	 */
+	@RequiredArgsConstructor
 	public static class ValueSet {
+
 		private final TreeMap<CharacteristicIndex, ValueEntries> valuesOfCharacteristics;
 
 		public ValueSet() {
 			this(new TreeMap<>());
-		}
-
-		public ValueSet(TreeMap<CharacteristicIndex, ValueEntries> valuesOfCharacteristics) {
-			super();
-			this.valuesOfCharacteristics = valuesOfCharacteristics;
 		}
 
 		public void addValueOfCharacteristic(CharacteristicIndex characteristicIndex, ValueEntries valueEntries) {

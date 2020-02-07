@@ -3,20 +3,23 @@ package cz.diribet.aqdef.model;
 import static java.util.Objects.requireNonNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.apache.commons.collections4.CollectionUtils;
 
 import cz.diribet.aqdef.KKey;
 import cz.diribet.aqdef.model.AqdefObjectModel.AbstractEntry;
+import lombok.EqualsAndHashCode;
 
 /**
  * Contains information about hierarchy of <i>parts / characteristics /
@@ -49,6 +52,8 @@ import cz.diribet.aqdef.model.AqdefObjectModel.AbstractEntry;
  * @see #normalize(AqdefObjectModel)
  *
  */
+// FIXME: 06.02.2020 - Honza Krakora: we are supporting hierarchy only for one part
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class AqdefHierarchy {
 	
 	//*******************************************
@@ -65,7 +70,10 @@ public class AqdefHierarchy {
 	private static final KKey KEY_SIMPLE_GROUPING_CHARACTERISTIC_PARENT = KKey.of("K2030");
 	private static final KKey KEY_SIMPLE_GROUPING_CHARACTERISTIC_CHILD = KKey.of("K2031");
 
+	@EqualsAndHashCode.Include
 	private TreeMap<NodeIndex, HierarchyEntry> nodeDefinitions = new TreeMap<>();
+
+	@EqualsAndHashCode.Include
 	private TreeMap<NodeIndex, List<HierarchyEntry>> nodeBindings = new TreeMap<>();
 
 	private boolean containsHierarchyInformation = false;
@@ -86,7 +94,7 @@ public class AqdefHierarchy {
 			putEntry(new HierarchyEntry(kKey, nodeIndex, (Integer) value));
 			
 		} else {
-			throw new IllegalArgumentException("Unknown hierarchy entry. Key: " + kKey + " Value: " + Objects.toString(value));
+			throw new IllegalArgumentException("Unknown hierarchy entry. Key: " + kKey + " Value: " + value);
 		}
 	}
 
@@ -96,11 +104,11 @@ public class AqdefHierarchy {
 		KKey kKey = entry.getKey();
 
 		if (kKey.isSimpleHierarchyLevel()) {
-			throw new RuntimeException("Direct insertion of simple hierarchy entry is not supported.");
+			throw new RuntimeException("Direct insertion of simple hierarchy entry is not supported");
 		}
 
 		if (containsSimpleHierarchyInformation) {
-			throw new RuntimeException("Combination of hierarchy (K51xx) and simple hierarchy (K2030/2031) is not supported.");
+			throw new RuntimeException("Combination of hierarchy (K51xx) and simple hierarchy (K2030/2031) is not supported");
 		}
 
 		putEntryInternal(entry);
@@ -121,7 +129,7 @@ public class AqdefHierarchy {
 		}
 
 		if (containsHierarchyInformation) {
-			throw new RuntimeException("Combination of hierarchy (K51xx) and simple hierarchy (K2030/2031) is not supported.");
+			throw new RuntimeException("Combination of hierarchy (K51xx) and simple hierarchy (K2030/2031) is not supported");
 		}
 		
 		NodeIndex nodeIndex = NodeIndex.of(valueInt);
@@ -150,7 +158,7 @@ public class AqdefHierarchy {
 			putEntryInternal(hierarchyEntry);
 
 		} else {
-			throw new IllegalArgumentException("Unknown simple hierarchy entry. Key: " + kKey + " Value: " + Objects.toString(value));
+			throw new IllegalArgumentException("Unknown simple hierarchy entry. Key: " + kKey + " Value: " + value);
 		}
 
 		containsSimpleHierarchyInformation = true;
@@ -166,7 +174,121 @@ public class AqdefHierarchy {
 			nodeBindings.computeIfAbsent(entry.getIndex(), k -> new ArrayList<>()).add(entry);
 
 		} else {
-			throw new IllegalArgumentException("Unknown hierarchy entry. Key: " + kKey + " Value: " + Objects.toString(entry.getValue()));
+			throw new IllegalArgumentException("Unknown hierarchy entry. Key: " + kKey + " Value: " + entry.getValue());
+		}
+	}
+
+	/**
+	 * Removes node definition and all subnode definitions as well as node bindings for the provided part.
+	 *
+	 * @param index index of the part to remove hierarchy for
+	 */
+	public void removeHierarchyForPart(PartIndex index) {
+		if (index == null) {
+			return;
+		}
+
+		Optional<NodeIndex> nodeIndex = getNodeIndexOfPart(index.getIndex());
+		nodeIndex.ifPresent(this::removeHierarchyPartForNode);
+	}
+
+	/**
+	 * Removes node definition and all subnode definitions as well as node bindings for the provided characteristic.
+	 *
+	 * @param index index of the characteristic to remove hierarchy for
+	 */
+	public void removeHierarchyForCharacteristic(CharacteristicIndex index) {
+		removeHierarchyForCharacteristic(index, true);
+	}
+
+	private void removeHierarchyForCharacteristic(CharacteristicIndex index, boolean removeParentBinding) {
+		if (index == null) {
+			return;
+		}
+
+		Integer characteristicIndex = index.getCharacteristicIndex();
+		Optional<NodeIndex> nodeIndexOfCharacteristic = getNodeIndexOfCharacteristic(characteristicIndex);
+
+		nodeIndexOfCharacteristic.ifPresent(this::removeHierarchyPartForNode);
+
+		if (removeParentBinding) {
+			removeParentBinding(characteristicIndex, nodeIndexOfCharacteristic.orElse(null));
+		}
+	}
+
+	/**
+	 * Removes node definition and all subnode definitions as well as node bindings for the provided group.
+	 *
+	 * @param index index of the group to remove hierarchy for
+	 */
+	public void removeHierarchyForGroup(GroupIndex index) {
+		removeHierarchyForGroup(index, true);
+	}
+
+	private void removeHierarchyForGroup(GroupIndex index, boolean removeParentBinding) {
+		if (index == null) {
+			return;
+		}
+
+		Integer groupIndex = index.getGroupIndex();
+		Optional<NodeIndex> nodeIndexOfGroup = getNodeIndexOfGroup(groupIndex);
+
+		nodeIndexOfGroup.ifPresent(this::removeHierarchyPartForNode);
+
+		if (removeParentBinding && nodeIndexOfGroup.isPresent()) {
+			removeParentBinding(groupIndex, nodeIndexOfGroup.get());
+		}
+	}
+
+	private void removeHierarchyPartForNode(NodeIndex nodeIndex) {
+		if (nodeIndex == null || !nodeDefinitions.containsKey(nodeIndex)) {
+			return;
+		}
+
+		List<HierarchyEntry> childBindings = nodeBindings.getOrDefault(nodeIndex, Collections.emptyList());
+
+		// remove subnodes recursively
+		for (HierarchyEntry entry : childBindings) {
+			NodeIndex childNodeIndex = NodeIndex.of((int) entry.getValue());
+
+			if (isNodeBinding(entry.getKey())) {
+				getCharacteristicOrGroupIndexOfNode(childNodeIndex, PartIndex.of(1)).ifPresent(elementIndex -> {
+					if (elementIndex instanceof CharacteristicIndex) {
+						removeHierarchyForCharacteristic((CharacteristicIndex) elementIndex, false);
+
+					} else if (elementIndex instanceof GroupIndex) {
+						removeHierarchyForGroup((GroupIndex) elementIndex, false);
+					}
+				});
+			}
+		}
+
+		// remove node bindings to this node
+		nodeBindings.remove(nodeIndex);
+
+		// remove node itself
+		nodeDefinitions.remove(nodeIndex);
+	}
+
+	private void removeParentBinding(Integer index, NodeIndex nodeIndex) {
+		if (index == null) {
+			return;
+		}
+
+		for (List<HierarchyEntry> bindings : nodeBindings.values()) {
+			Predicate<HierarchyEntry> filter = entry -> {
+				KKey kKey = entry.getKey();
+
+				if (nodeIndex != null) {
+					return nodeIndex.getIndex().equals(entry.getValue()) && isNodeBinding(kKey);
+				}
+
+				return index.equals(entry.getValue()) && isCharacteristicBinding(kKey);
+			};
+
+			if (bindings.removeIf(filter)) {
+				break;
+			}
 		}
 	}
 	
@@ -181,13 +303,11 @@ public class AqdefHierarchy {
 		requireNonNull(aqdefObjectModel);
 		
 		if (this != aqdefObjectModel.getHierarchy()) {
-			throw new IllegalArgumentException("The provided aqdef model does not contain this normalized hierarchy.");
+			throw new IllegalArgumentException("The provided aqdef model does not contain this normalized hierarchy");
 		}
 		
 		// currently we only normalize hierarchy created from a simple characteristics grouping
-		AqdefHierarchy normalizedHierarchy = normalizeSimpleCharacteristicsGrouping(aqdefObjectModel);
-		
-		return normalizedHierarchy;
+		return normalizeSimpleCharacteristicsGrouping(aqdefObjectModel);
 	}
 	
 	private AqdefHierarchy normalizeSimpleCharacteristicsGrouping(AqdefObjectModel aqdefObjectModel) {
@@ -384,7 +504,7 @@ public class AqdefHierarchy {
 
 	private Optional<NodeIndex> getParentNodeIndexOfNode(NodeIndex nodeIndex) {
 		return nodeBindings.values().stream()
-									.flatMap(list -> list.stream())
+									.flatMap(Collection::stream)
 									.filter(hierarchyEntry -> {
 										return hierarchyEntry.getKey().equals(KEY_NODE_BINDING)
 												&& nodeIndex.getIndex().equals(hierarchyEntry.getValue());
@@ -399,7 +519,7 @@ public class AqdefHierarchy {
 		}
 		
 		return nodeBindings.values().stream()
-									.flatMap(list -> list.stream())
+									.flatMap(Collection::stream)
 									.filter(hierarchyEntry -> {
 										return hierarchyEntry.getKey().equals(KEY_CHARACTERISTIC_BINDING)
 												&& characteristicIndex.equals(hierarchyEntry.getValue());
@@ -408,19 +528,19 @@ public class AqdefHierarchy {
 									.findAny();
 	}
 
-	private Optional<NodeIndex> getNodeIndexOfGroup(Integer groupIndex) {
-		if (groupIndex == null) {
+	private Optional<NodeIndex> getNodeIndexOfPart(Integer partIndex) {
+		if (partIndex == null) {
 			return Optional.empty();
 		}
 
 		return nodeDefinitions.entrySet().stream()
-										 .filter(entry -> {
-											 HierarchyEntry hierarchyEntry = entry.getValue();
-											 return KEY_GROUP_NODE.equals(hierarchyEntry.getKey())
-													 && groupIndex.equals(hierarchyEntry.getValue());
-										 })
-										 .map(Entry::getKey)
-										 .findAny();
+		                      .filter(entry -> {
+			                      HierarchyEntry hierarchyEntry = entry.getValue();
+			                      return KEY_PART_NODE.equals(hierarchyEntry.getKey())
+					                      && partIndex.equals(hierarchyEntry.getValue());
+		                      })
+		                      .map(Entry::getKey)
+		                      .findAny();
 	}
 
 	private Optional<NodeIndex> getNodeIndexOfCharacteristic(Integer characteristicIndex) {
@@ -438,42 +558,19 @@ public class AqdefHierarchy {
 										 .findAny();
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((nodeBindings == null) ? 0 : nodeBindings.hashCode());
-		result = prime * result + ((nodeDefinitions == null) ? 0 : nodeDefinitions.hashCode());
-		return result;
-	}
+	private Optional<NodeIndex> getNodeIndexOfGroup(Integer groupIndex) {
+		if (groupIndex == null) {
+			return Optional.empty();
+		}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof AqdefHierarchy)) {
-			return false;
-		}
-		AqdefHierarchy other = (AqdefHierarchy) obj;
-		if (nodeBindings == null) {
-			if (other.nodeBindings != null) {
-				return false;
-			}
-		} else if (!nodeBindings.equals(other.nodeBindings)) {
-			return false;
-		}
-		if (nodeDefinitions == null) {
-			if (other.nodeDefinitions != null) {
-				return false;
-			}
-		} else if (!nodeDefinitions.equals(other.nodeDefinitions)) {
-			return false;
-		}
-		return true;
+		return nodeDefinitions.entrySet().stream()
+		                      .filter(entry -> {
+			                      HierarchyEntry hierarchyEntry = entry.getValue();
+			                      return KEY_GROUP_NODE.equals(hierarchyEntry.getKey())
+					                      && groupIndex.equals(hierarchyEntry.getValue());
+		                      })
+		                      .map(Entry::getKey)
+		                      .findAny();
 	}
 	
 	private boolean isBinding(KKey kKey) {
