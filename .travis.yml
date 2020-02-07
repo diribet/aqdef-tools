@@ -1,7 +1,7 @@
 language: java
 
 jdk:
-  - openjdk8
+  - openjdk9
 
 notifications:
   email:
@@ -20,7 +20,7 @@ deploy:
     on:
       repo: diribet/aqdef-tools
       branch: master
-      jdk: openjdk8
+      jdk: openjdk9
   -
     provider: script
     script: .travis/deploy.sh
@@ -28,4 +28,4 @@ deploy:
     on:
       repo: diribet/aqdef-tools
       tags: true
-      jdk: openjdk8
+      jdk: openjdk9
