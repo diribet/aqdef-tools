@@ -1,7 +1,9 @@
 language: java
 
+dist: xenial
+
 jdk:
-  - openjdk9
+  - openjdk11
 
 notifications:
   email:
@@ -20,7 +22,7 @@ deploy:
     on:
       repo: diribet/aqdef-tools
       branch: master
-      jdk: openjdk9
+      jdk: openjdk11
   -
     provider: script
     script: .travis/deploy.sh
@@ -28,4 +30,4 @@ deploy:
     on:
       repo: diribet/aqdef-tools
       tags: true
-      jdk: openjdk9
+      jdk: openjdk11
