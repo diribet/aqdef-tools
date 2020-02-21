@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -284,6 +285,65 @@ public class AqdefObjectModel {
 	}
 
 	/**
+	 * Returns all the characteristics of a part with the given index that are root of characteristic
+	 * hierarchy (has no parent characteristics).
+	 *
+	 * @param partIndex
+	 * @return
+	 */
+	public List<CharacteristicEntries> getRootCharacteristics(PartIndex partIndex) {
+		return getCharacteristics(partIndex).stream()
+											.filter(characteristic -> {
+												Optional<Object> parentIndex =
+														hierarchy.getParentIndex(characteristic.getIndex());
+												return parentIndex.isEmpty();
+											})
+											.collect(toList());
+	}
+
+	/**
+	 * Returns all child characteristics of the characteristic with the given index.
+	 *
+	 * @param characteristicIndex
+	 * @return
+	 */
+	public List<CharacteristicEntries> getChildCharacteristics(CharacteristicIndex characteristicIndex) {
+		List<Object> childrenIndexes = hierarchy.getChildIndexes(characteristicIndex);
+
+		return childrenIndexes.stream()
+							  .filter(index -> index instanceof CharacteristicIndex)
+							  .map(index -> (CharacteristicIndex) index)
+							  .map(this::getCharacteristicEntries)
+							  .collect(toList());
+	}
+
+	/**
+	 * Returns all child groups of the characteristic with the given index.
+	 *
+	 * @param characteristicIndex
+	 * @return
+	 */
+	public List<GroupEntries> getChildGroups(CharacteristicIndex characteristicIndex) {
+		List<Object> childrenIndexes = hierarchy.getChildIndexes(characteristicIndex);
+
+		return childrenIndexes.stream()
+							  .filter(index -> index instanceof GroupIndex)
+							  .map(index -> (GroupIndex) index)
+							  .map(this::getGroupEntries)
+							  .collect(toList());
+	}
+
+	public GroupEntries getGroupEntries(GroupIndex groupIndex) {
+		Map<GroupIndex, GroupEntries> entriesWithPartIndex = groupEntries.get(groupIndex.getPartIndex());
+
+		if (entriesWithPartIndex == null) {
+			return null;
+		} else {
+			return entriesWithPartIndex.get(groupIndex);
+		}
+	}
+
+	/**
 	 * Returns all the groups of a part with the given index.
 	 *
 	 * @param partIndex
@@ -297,6 +357,54 @@ public class AqdefObjectModel {
 		} else {
 			return new ArrayList<>(entriesWithPartIndex.values());
 		}
+	}
+
+	/**
+	 * Returns all the groups of a part with the given index that are root of group
+	 * hierarchy (has no parent group).
+	 *
+	 * @param partIndex
+	 * @return
+	 */
+	public List<GroupEntries> getRootGroups(PartIndex partIndex) {
+		return getGroups(partIndex).stream()
+								   .filter(group -> {
+									   Optional<Object> parentIndex = hierarchy.getParentIndex(group.getIndex());
+									   return parentIndex.isEmpty();
+								   })
+								   .collect(toList());
+	}
+
+	/**
+	 * Returns all child characteristics of the characteristic with the given index.
+	 *
+	 * @param groupIndex
+	 * @return
+	 */
+	public List<CharacteristicEntries> getChildCharacteristics(GroupIndex groupIndex) {
+		List<Object> childrenIndexes = hierarchy.getChildIndexes(groupIndex);
+
+		return childrenIndexes.stream()
+							  .filter(index -> index instanceof CharacteristicIndex)
+							  .map(index -> (CharacteristicIndex) index)
+							  .map(this::getCharacteristicEntries)
+							  .collect(toList());
+	}
+
+	/**
+	 * Returns all child groups of the characteristic with the given index.
+	 *
+	 * @param groupIndex
+	 * @return
+	 */
+	public List<GroupEntries> getChildGroups(GroupIndex groupIndex) {
+		List<Object> childrenIndexes = hierarchy.getChildIndexes(groupIndex);
+
+		return childrenIndexes.stream()
+							  .filter(index -> index instanceof GroupIndex)
+							  .map(index -> (GroupIndex) index)
+							  .map(this::getGroupEntries)
+							  .collect(toList());
 	}
 
 	/**
