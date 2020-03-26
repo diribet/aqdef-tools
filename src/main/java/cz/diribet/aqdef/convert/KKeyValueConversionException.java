@@ -10,4 +10,8 @@ public class KKeyValueConversionException extends Exception {
 		super(message, cause);
 	}
 
+	public KKeyValueConversionException(String message) {
+		super(message);
+	}
+
 }

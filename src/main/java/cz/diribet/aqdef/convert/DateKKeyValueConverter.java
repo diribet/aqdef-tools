@@ -1,10 +1,12 @@
 package cz.diribet.aqdef.convert;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.TimeZone;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
 
 /**
  * @author Vlastimil Dolejs
@@ -12,25 +14,42 @@ import org.apache.commons.lang3.time.FastDateFormat;
  */
 public class DateKKeyValueConverter implements IKKeyValueConverter<Date> {
 
-	private final FastDateFormat outputFormat = newDateFormat("dd.MM.yyyy/HH:mm:ss");
+	private static final DateTimeFormatter OUTPUT_FORMATTER = newDateFormat("dd.MM.yyyy/HH:mm:ss");
 
-	private final FastDateFormat[] inputFormats = new FastDateFormat[] {
-		newDateFormat("dd.MM.yy/HH:mm:ss"),
-		newDateFormat("MM/dd/yy/HH:mm:ss"),
-		newDateFormat("yy-MM-dd/HH:mm:ss"),
-		newDateFormat("dd.MM.yy/HH:mm"),
-		newDateFormat("MM/dd/yy/HH:mm"),
-		newDateFormat("yy-MM-dd/HH:mm"),
-		newDateFormat("dd.MM.yy HH:mm:ss"),
-		newDateFormat("MM/dd/yy HH:mm:ss"),
-		newDateFormat("yy-MM-dd HH:mm:ss"),
-		newDateFormat("dd.MM.yy HH:mm"),
-		newDateFormat("MM/dd/yy HH:mm"),
-		newDateFormat("yy-MM-dd HH:mm")
-	};
+	private static final List<DateTimeFormatter> INPUT_FORMATTERS = List.of(
+		newDateFormat("d.M.yy/H:m:s"),
+		newDateFormat("d.M.yy/H:m"),
+		newDateFormat("d.M.yyyy/H:m:s"),
+		newDateFormat("d.M.yyyy/H:m"),
 
-	private FastDateFormat newDateFormat(String pattern) {
-		return FastDateFormat.getInstance(pattern, TimeZone.getDefault());
+		newDateFormat("M/d/yy/H:m:s"),
+		newDateFormat("M/d/yy/H:m"),
+		newDateFormat("M/d/yyyy/H:m:s"),
+		newDateFormat("M/d/yyyy/H:m"),
+
+		newDateFormat("yy-M-d/H:m:s"),
+		newDateFormat("yy-M-d/H:m"),
+		newDateFormat("yyyy-M-d/H:m:s"),
+		newDateFormat("yyyy-M-d/H:m"),
+
+		newDateFormat("d.M.yy H:m:s"),
+		newDateFormat("d.M.yy H:m"),
+		newDateFormat("d.M.yyyy H:m:s"),
+		newDateFormat("d.M.yyyy H:m"),
+
+		newDateFormat("M/d/yy H:m:s"),
+		newDateFormat("M/d/yy H:m"),
+		newDateFormat("M/d/yyyy H:m:s"),
+		newDateFormat("M/d/yyyy H:m"),
+
+		newDateFormat("yy-M-d H:m:s"),
+		newDateFormat("yy-M-d H:m"),
+		newDateFormat("yyyy-M-d H:m:s"),
+		newDateFormat("yyyy-M-d H:m")
+	);
+
+	private static DateTimeFormatter newDateFormat(String pattern) {
+		return DateTimeFormatter.ofPattern(pattern);
 	}
 
 	@Override
@@ -39,18 +58,15 @@ public class DateKKeyValueConverter implements IKKeyValueConverter<Date> {
 			return null;
 		}
 
-		Throwable firstException = null;
-		for (FastDateFormat inputFormat : inputFormats) {
+		for (DateTimeFormatter inputFormat : INPUT_FORMATTERS) {
 			try {
-				return inputFormat.parse(value);
-			} catch (Throwable e) {
-				if (firstException == null) {
-					firstException = e;
-				}
-			}
+				LocalDateTime dateTime = LocalDateTime.parse(value, inputFormat);
+				return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
+
+			} catch (Throwable ignored) {}
 		}
 
-		throw new KKeyValueConversionException(value, Date.class, firstException);
+		throw new KKeyValueConversionException("Failed to convert value:" + value + " to Date. Unsupported format.");
 	}
 
 	@Override
@@ -58,8 +74,7 @@ public class DateKKeyValueConverter implements IKKeyValueConverter<Date> {
 		if (value == null) {
 			return null;
 		}
-
-		return outputFormat.format(value);
+		return OUTPUT_FORMATTER.format(value.toInstant());
 	}
 
 }

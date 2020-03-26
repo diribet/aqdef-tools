@@ -7,10 +7,10 @@ import spock.lang.Unroll
 class DateKKeyValueConverterTest extends Specification {
 
 	@Shared
-	def expectedDate = Date.parse("dd.MM.yyyy HH:mm", "9.5.2018 10:30")
+	def expectedDateWithoutSeconds = Date.parse("dd.MM.yyyy HH:mm", "9.5.2018 10:05")
 
 	@Shared
-	def expectedDateWithSeconds = Date.parse("dd.MM.yyyy HH:mm:ss", "9.5.2018 10:30:59")
+	def expectedDateWithSeconds = Date.parse("dd.MM.yyyy HH:mm:ss", "9.5.2018 10:05:59")
 
 	@Unroll
 	def "Date text '#inputDate' is parsed correctly"() {
@@ -26,93 +26,74 @@ class DateKKeyValueConverterTest extends Specification {
 		where:
 			inputDate 					|| result
 
-			// dd.MM.yy/HH:mm:ss
-			"09.05.18/10:30:59"			|| expectedDateWithSeconds
-			"09.5.18/10:30:59"			|| expectedDateWithSeconds
-			"9.05.18/10:30:59"			|| expectedDateWithSeconds
-			"9.5.18/10:30:59"			|| expectedDateWithSeconds
-			"9.5.2018/10:30:59"			|| expectedDateWithSeconds
+			// d.M.yy(yy)/H:m(:s)
+			"09.05.18/10:05:59"			|| expectedDateWithSeconds
+			"09.5.18/10:5:59"			|| expectedDateWithSeconds
+			"9.05.18/10:05:59"			|| expectedDateWithSeconds
+			"9.5.18/10:05:59"			|| expectedDateWithSeconds
+			"9.5.18/10:05"				|| expectedDateWithoutSeconds
+			"9.5.2018/10:05:59"			|| expectedDateWithSeconds
 
-			// MM/dd/yy/HH:mm:ss
-			"05/09/18/10:30:59"			|| expectedDateWithSeconds
-			"05/9/18/10:30:59"			|| expectedDateWithSeconds
-			"5/09/18/10:30:59"			|| expectedDateWithSeconds
-			"5/9/18/10:30:59"			|| expectedDateWithSeconds
-			"5/9/2018/10:30:59"			|| expectedDateWithSeconds
+			// M/d/yy(yy)/H:m(:s)
+			"05/09/18/10:05:59"			|| expectedDateWithSeconds
+			"05/9/18/10:05:59"			|| expectedDateWithSeconds
+			"5/09/18/10:05:59"			|| expectedDateWithSeconds
+			"5/9/18/10:05:59"			|| expectedDateWithSeconds
+			"5/9/18/10:05"				|| expectedDateWithoutSeconds
+			"5/9/2018/10:05:59"			|| expectedDateWithSeconds
 
+			// yy(yy)-M-d/H:m(:s)
+			"18-05-09/10:05:59"			|| expectedDateWithSeconds
+			"18-5-09/10:5:59"			|| expectedDateWithSeconds
+			"18-05-9/10:05:59"			|| expectedDateWithSeconds
+			"18-5-9/10:05:59"			|| expectedDateWithSeconds
+			"18-5-9/10:05"				|| expectedDateWithoutSeconds
+			"2018-5-9/10:05:59"			|| expectedDateWithSeconds
 
-			// yy-MM-dd/HH:mm:ss
-			"18-05-09/10:30:59"			|| expectedDateWithSeconds
-			"18-5-09/10:30:59"			|| expectedDateWithSeconds
-			"18-05-9/10:30:59"			|| expectedDateWithSeconds
-			"18-5-9/10:30:59"			|| expectedDateWithSeconds
-			"2018-5-9/10:30:59"			|| expectedDateWithSeconds
+			// d.M.yy(yy) H:m(:s)
+			"09.05.18/10:05:59"			|| expectedDateWithSeconds
+			"09.5.18/10:5:59"			|| expectedDateWithSeconds
+			"9.05.18/10:05:59"			|| expectedDateWithSeconds
+			"9.5.18/10:05:59"			|| expectedDateWithSeconds
+			"9.5.18/10:05"				|| expectedDateWithoutSeconds
+			"9.5.2018/10:05:59"			|| expectedDateWithSeconds
 
+			// M/d/yy(yy) H:m(:s)
+			"05/09/18/10:05:59"			|| expectedDateWithSeconds
+			"05/9/18/10:5:59"			|| expectedDateWithSeconds
+			"5/09/18/10:05:59"			|| expectedDateWithSeconds
+			"5/9/18/10:05:59"			|| expectedDateWithSeconds
+			"5/9/18/10:05"				|| expectedDateWithoutSeconds
+			"5/9/2018/10:05:59"			|| expectedDateWithSeconds
 
-			// dd.MM.yy/HH:mm
-			"09.05.18/10:30"			|| expectedDate
-			"09.5.18/10:30"				|| expectedDate
-			"9.05.18/10:30"				|| expectedDate
-			"9.5.18/10:30"				|| expectedDate
-			"9.5.2018/10:30"			|| expectedDate
+			// yy(yy)-M-d H:m(:s)
+			"18-05-09 10:05:59"			|| expectedDateWithSeconds
+			"18-5-09 10:5:59"			|| expectedDateWithSeconds
+			"18-05-9 10:05:59"			|| expectedDateWithSeconds
+			"18-5-9 10:05:59"			|| expectedDateWithSeconds
+			"18-5-9 10:05"				|| expectedDateWithoutSeconds
+			"2018-5-9 10:05:59"			|| expectedDateWithSeconds
+	}
 
-			// MM/dd/yy/HH:mm
-			"05/09/18/10:30"			|| expectedDate
-			"05/9/18/10:30"				|| expectedDate
-			"5/09/18/10:30"				|| expectedDate
-			"5/9/18/10:30"				|| expectedDate
-			"5/9/2018/10:30"			|| expectedDate
+	@Unroll
+	def "Date text '#inputDate' is not supported"() {
+		given:
+			def dateKKeyValueConverter = new DateKKeyValueConverter()
 
-			// yy-MM-dd/HH:mm:ss
-			"18-05-09/10:30"			|| expectedDate
-			"18-05-9/10:30"				|| expectedDate
-			"18-5-09/10:30"				|| expectedDate
-			"18-5-9/10:30"				|| expectedDate
-			"2018-5-9/10:30"			|| expectedDate
+		when:
+			dateKKeyValueConverter.convert(inputDate)
 
-			// dd.MM.yy HH:mm:ss
-			"09.05.18/10:30:59"			|| expectedDateWithSeconds
-			"09.5.18/10:30:59"			|| expectedDateWithSeconds
-			"9.05.18/10:30:59"			|| expectedDateWithSeconds
-			"9.5.18/10:30:59"			|| expectedDateWithSeconds
-			"9.5.2018/10:30:59"			|| expectedDateWithSeconds
+		then:
+			thrown(KKeyValueConversionException)
 
-			// MM/dd/yy HH:mm:ss
-			"05/09/18/10:30:59"			|| expectedDateWithSeconds
-			"05/9/18/10:30:59"			|| expectedDateWithSeconds
-			"5/09/18/10:30:59"			|| expectedDateWithSeconds
-			"5/9/18/10:30:59"			|| expectedDateWithSeconds
-			"5/9/2018/10:30:59"			|| expectedDateWithSeconds
-
-
-			// yy-MM-dd HH:mm:ss
-			"18-05-09 10:30:59"			|| expectedDateWithSeconds
-			"18-5-09 10:30:59"			|| expectedDateWithSeconds
-			"18-05-9 10:30:59"			|| expectedDateWithSeconds
-			"18-5-9 10:30:59"			|| expectedDateWithSeconds
-			"2018-5-9 10:30:59"			|| expectedDateWithSeconds
-
-
-			// dd.MM.yy HH:mm
-			"09.05.18 10:30"			|| expectedDate
-			"09.5.18 10:30"				|| expectedDate
-			"9.05.18 10:30"				|| expectedDate
-			"9.5.18 10:30"				|| expectedDate
-			"9.5.2018 10:30"			|| expectedDate
-
-			// MM/dd/yy HH:mm
-			"05/09/18 10:30"			|| expectedDate
-			"05/9/18 10:30"				|| expectedDate
-			"5/09/18 10:30"				|| expectedDate
-			"5/9/18 10:30"				|| expectedDate
-			"5/9/2018 10:30"			|| expectedDate
-
-			// yy-MM-dd HH:mm:ss
-			"18-05-09 10:30"			|| expectedDate
-			"18-05-9 10:30"				|| expectedDate
-			"18-5-09 10:30"				|| expectedDate
-			"18-5-9 10:30"				|| expectedDate
-			"2018-5-9 10:30"			|| expectedDate
+		where:
+			inputDate 									| _
+			/* d/M/yyyy/H:m:s */ "20/05/2018/18:05:10"	| _
+			/* d-M-yyyy/H:m:s */ "20-05-2018/18:05:10"	| _
+			/* M.d.yyyy/H:m:s */ "05.20.2018/18:05:10"	| _
+			/* M-d-yyyy/H:m:s */ "05-20-2018/18:05:10"	| _
+			/* yyyy.M.d/H:m:s */ "2018.05.20/18:05:10"	| _
+			/* yyyy/M/d/H:m:s */ "2018/05/20/18:05:10"	| _
 	}
 
 }
