@@ -4,6 +4,9 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import java.time.LocalDateTime
+import java.time.ZoneId
+
 class DateKKeyValueConverterTest extends Specification {
 
 	@Shared
@@ -94,6 +97,25 @@ class DateKKeyValueConverterTest extends Specification {
 			/* M-d-yyyy/H:m:s */ "05-20-2018/18:05:10"	| _
 			/* yyyy.M.d/H:m:s */ "2018.05.20/18:05:10"	| _
 			/* yyyy/M/d/H:m:s */ "2018/05/20/18:05:10"	| _
+			/* yyyy/d/M/H:m:s */ "2018.03.20/18:13:10"	| _
+	}
+
+	def "Date is formated correctly"() {
+		given:
+			def dateKKeyValueConverter = new DateKKeyValueConverter()
+			def inputDate = createDate(5, 10, 2018, 15, 5, 10)
+
+		when:
+			def formatedDate = dateKKeyValueConverter.toString(inputDate)
+
+		then:
+			formatedDate == "05.10.2018/15:05:10"
+	}
+
+	Date createDate(int day, int month, int year, int hour, int minutes, int seconds) {
+		def localDateTime = LocalDateTime.of(year, month, day, hour, minutes, seconds)
+		return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant())
 	}
 
 }
+

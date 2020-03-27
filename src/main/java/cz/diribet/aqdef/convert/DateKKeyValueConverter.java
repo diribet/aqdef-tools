@@ -74,7 +74,10 @@ public class DateKKeyValueConverter implements IKKeyValueConverter<Date> {
 		if (value == null) {
 			return null;
 		}
-		return OUTPUT_FORMATTER.format(value.toInstant());
+
+		LocalDateTime localDateTime = LocalDateTime.ofInstant(value.toInstant(), ZoneId.systemDefault());
+
+		return OUTPUT_FORMATTER.format(localDateTime);
 	}
 
 }
