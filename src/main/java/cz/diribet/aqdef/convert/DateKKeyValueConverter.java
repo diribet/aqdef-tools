@@ -45,7 +45,22 @@ public class DateKKeyValueConverter implements IKKeyValueConverter<Date> {
 		newDateFormat("yy-M-d H:m:s"),
 		newDateFormat("yy-M-d H:m"),
 		newDateFormat("yyyy-M-d H:m:s"),
-		newDateFormat("yyyy-M-d H:m")
+		newDateFormat("yyyy-M-d H:m"),
+
+		newDateFormat("d.M.yy.H:m:s"),
+		newDateFormat("d.M.yy.H:m"),
+		newDateFormat("d.M.yyyy.H:m:s"),
+		newDateFormat("d.M.yyyy.H:m"),
+
+		newDateFormat("M/d/yy.H:m:s"),
+		newDateFormat("M/d/yy.H:m"),
+		newDateFormat("M/d/yyyy.H:m:s"),
+		newDateFormat("M/d/yyyy.H:m"),
+
+		newDateFormat("yy-M-d.H:m:s"),
+		newDateFormat("yy-M-d.H:m"),
+		newDateFormat("yyyy-M-d.H:m:s"),
+		newDateFormat("yyyy-M-d.H:m")
 	);
 
 	private static DateTimeFormatter newDateFormat(String pattern) {

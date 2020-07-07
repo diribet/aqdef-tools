@@ -76,6 +76,30 @@ class DateKKeyValueConverterTest extends Specification {
 			"18-5-9 10:05:59"			|| expectedDateWithSeconds
 			"18-5-9 10:05"				|| expectedDateWithoutSeconds
 			"2018-5-9 10:05:59"			|| expectedDateWithSeconds
+
+			// d.M.yy(yy).H:m(:s)
+			"09.05.18.10:05:59"			|| expectedDateWithSeconds
+			"09.5.18.10:5:59"			|| expectedDateWithSeconds
+			"9.05.18.10:05:59"			|| expectedDateWithSeconds
+			"9.5.18.10:05:59"			|| expectedDateWithSeconds
+			"9.5.18.10:05"				|| expectedDateWithoutSeconds
+			"9.5.2018.10:05:59"			|| expectedDateWithSeconds
+
+			// M/d/yy(yy).H:m(:s)
+			"05/09/18.10:05:59"			|| expectedDateWithSeconds
+			"05/9/18.10:05:59"			|| expectedDateWithSeconds
+			"5/09/18.10:05:59"			|| expectedDateWithSeconds
+			"5/9/18.10:05:59"			|| expectedDateWithSeconds
+			"5/9/18.10:05"				|| expectedDateWithoutSeconds
+			"5/9/2018.10:05:59"			|| expectedDateWithSeconds
+
+			// yy(yy)-M-d.H:m(:s)
+			"18-05-09.10:05:59"			|| expectedDateWithSeconds
+			"18-5-09.10:5:59"			|| expectedDateWithSeconds
+			"18-05-9.10:05:59"			|| expectedDateWithSeconds
+			"18-5-9.10:05:59"			|| expectedDateWithSeconds
+			"18-5-9.10:05"				|| expectedDateWithoutSeconds
+			"2018-5-9.10:05:59"			|| expectedDateWithSeconds
 	}
 
 	@Unroll
@@ -100,7 +124,7 @@ class DateKKeyValueConverterTest extends Specification {
 			/* yyyy/d/M/H:m:s */ "2018.03.20/18:13:10"	| _
 	}
 
-	def "Date is formated correctly"() {
+	def "Date is formatted correctly"() {
 		given:
 			def dateKKeyValueConverter = new DateKKeyValueConverter()
 			def inputDate = createDate(5, 10, 2018, 15, 5, 10)
