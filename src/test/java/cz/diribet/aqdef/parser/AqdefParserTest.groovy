@@ -430,6 +430,28 @@ class AqdefParserTest extends Specification {
 			thrown(RuntimeException)
 	}
 
+	def "empty value is ignored with all of its additional data"() {
+		when:
+			AqdefObjectModel model = parse(dfqWithEmptyValue)
+			ValueEntries value1ofCharacteristic1 = model.getValueEntries(1, 1, 1)
+			ValueEntries value2ofCharacteristic1 = model.getValueEntries(1, 1, 2)
+			ValueEntries value1ofCharacteristic2 = model.getValueEntries(1, 2, 1)
+			ValueEntries value2ofCharacteristic2 = model.getValueEntries(1, 2, 2)
+
+		then:
+			value1ofCharacteristic1.getValue("K0001") == 1
+			value1ofCharacteristic1.getValue("K0002") == 0
+
+			value2ofCharacteristic1.getValue("K0001") == null
+			value2ofCharacteristic1.getValue("K0002") == 255
+
+			value1ofCharacteristic2.getValue("K0001") == 10
+			value1ofCharacteristic2.getValue("K0002") == 0
+
+			value2ofCharacteristic2.getValue("K0001") == 20
+			value2ofCharacteristic2.getValue("K0002") == 0
+	}
+
 	def "binary data line with characteristic separator is parsed"() {
 		when:
 			AqdefObjectModel model = parse(dfqWithCharacteristicSeparatorInBinaryLine)
@@ -810,6 +832,21 @@ class AqdefParserTest extends Specification {
 		K2001/1 characteristic1
 		1001.01.2014/00:00:00
 		K0014/1/ partId1
+	"""
+
+	def dfqWithEmptyValue = """
+		K0100 2
+		K1001/1 part1
+		K2002/1 characteristic1
+		K2002/2 characteristic2
+		K0001/1 1
+		K0002/1 0
+		K0001/2 10
+		K0002/2 0
+		K0001/1
+		K0002/1 255 
+		K0001/2 20
+		K0002/2 0
 	"""
 
 	def dfqWithCharacteristicSeparatorInBinaryLine = """
