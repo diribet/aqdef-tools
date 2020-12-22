@@ -430,7 +430,7 @@ class AqdefParserTest extends Specification {
 			thrown(RuntimeException)
 	}
 
-	def "empty value is ignored with all of its additional data"() {
+	def "empty value with additional data"() {
 		when:
 			AqdefObjectModel model = parse(dfqWithEmptyValue)
 			ValueEntries value1ofCharacteristic1 = model.getValueEntries(1, 1, 1)
