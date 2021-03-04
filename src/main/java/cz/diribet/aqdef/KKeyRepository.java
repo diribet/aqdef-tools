@@ -282,7 +282,24 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K2437"), KKeyMetadata.of("MEPRUEFENDED", Date.class));
 			keys.put(KKey.of("K2630"), KKeyMetadata.of("?K2630?", BigDecimal.class, false));
 			keys.put(KKey.of("K2631"), KKeyMetadata.of("?K2631?", BigDecimal.class, false));
-
+			keys.put(KKey.of("K2017"), KKeyMetadata.of("?K2017?", Integer.class, 3, false)); // Alarm detection type
+			keys.put(KKey.of("K2018"), KKeyMetadata.of("?K2018?", Integer.class, 3, false)); // Acceptance limit extended
+			keys.put(KKey.of("K2028"), KKeyMetadata.of("?K2028?", Integer.class, 3, false)); // Natural distribution
+			keys.put(KKey.of("K2049"), KKeyMetadata.of("?K2049?", Integer.class, 3, false)); // Channel Initialization-Index
+			keys.put(KKey.of("K2062"), KKeyMetadata.of("?K2062?", Integer.class, 5, false)); // Cavity catalogue
+			keys.put(KKey.of("K2063"), KKeyMetadata.of("?K2063?", Integer.class, 5, false)); // Machine catalogue
+			keys.put(KKey.of("K2064"), KKeyMetadata.of("?K2064?", Integer.class, 5, false)); // Gage catalogue
+			keys.put(KKey.of("K2065"), KKeyMetadata.of("?K2065?", Integer.class, 5, false)); // Operator catalogue
+			keys.put(KKey.of("K2066"), KKeyMetadata.of("?K2066?", Integer.class, 5, false)); // Sub-catalogue K0061
+			keys.put(KKey.of("K2067"), KKeyMetadata.of("?K2067?", Integer.class, 5, false)); // Sub-catalogue K0062
+			keys.put(KKey.of("K2068"), KKeyMetadata.of("?K2068?", Integer.class, 5, false)); // Sub-catalogue K0063
+			keys.put(KKey.of("K2146"), KKeyMetadata.of("?K2146?", Integer.class, 3, false)); // Decimal places relative axis
+			keys.put(KKey.of("K2175"), KKeyMetadata.of("?K2175?", Integer.class, 3, false)); // Conditions for frequency sums
+			keys.put(KKey.of("K2176"), KKeyMetadata.of("?K2176?", Integer.class, 3, false)); // Life distance after Eckel
+			keys.put(KKey.of("K2206"), KKeyMetadata.of("?K2206?", Integer.class, 5, false)); // Number of devices
+			keys.put(KKey.of("K2207"), KKeyMetadata.of("?K2207?", Integer.class, 5, false)); // Number of test intervals
+			keys.put(KKey.of("K2654"), KKeyMetadata.of("?K2654?", Integer.class, 3, false)); // VDA 5 Version
+			keys.put(KKey.of("K2997"), KKeyMetadata.of("?K2997?", String.class, 100, false)); // Characteristic GUID
 
 			keys.put(KKey.of("K0054"), KKeyMetadata.of("WV0054", String.class, 32));
 			keys.put(KKey.of("K0055"), KKeyMetadata.of("WV0055", String.class, 32));
