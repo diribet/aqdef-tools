@@ -1,5 +1,7 @@
 package cz.diribet.aqdef.parser.line;
 
+import java.util.Set;
+
 import cz.diribet.aqdef.AqdefConstants;
 import cz.diribet.aqdef.KKey;
 import cz.diribet.aqdef.KKeyMetadata;
@@ -21,6 +23,16 @@ public abstract class AbstractLineParser implements AqdefConstants {
 
     private final KKeyRepository kKeyRepository = KKeyRepository.getInstance();
 
+    /**
+     * Set to true if the invalid K-key logging should be suppressed for all K-keys.
+     */
+    private boolean suppressInvalidKKeyLogging = false;
+
+    /**
+     * Set K-keys for which the invalid K-key logging should be suppressed.
+     */
+    private Set<KKey> suppressInvalidKKeyLoggingFor;
+
     public abstract boolean isLineSupported(String line);
     public abstract void parseLine(String line, AqdefObjectModel aqdefObjectModel, ParserContext parserContext);
 
@@ -35,9 +47,11 @@ public abstract class AbstractLineParser implements AqdefConstants {
         KKeyMetadata kKeyMetadata = kKeyRepository.getMetadataFor(key);
 
         if (kKeyMetadata == null) {
-            LOG.warn("{} Unknown k-key: {}. Value will be discarded.",
-                     ParserContext.lineLogContext(parserContext),
-                     key);
+            if (isInvalidKKeyLoggingEnabled(key)) {
+                LOG.warn("{} Unknown k-key: {}. Value will be discarded.",
+                         ParserContext.lineLogContext(parserContext),
+                         key);
+            }
 
             throw new UnknownKKeyException(key);
         }
@@ -48,14 +62,25 @@ public abstract class AbstractLineParser implements AqdefConstants {
             return converter.convert(valueString);
 
         } catch (Throwable e) {
-            String message =
-                    ParserContext.lineLogContext(parserContext) +
-                    " Failed to convert value: " + valueString + " of K-key: " + key +
-                    " using converter: " + converter + ". The value will be discarded.";
+            if (isInvalidKKeyLoggingEnabled(key)) {
+                String message =
+                        ParserContext.lineLogContext(parserContext) +
+                        " Failed to convert value: " + valueString + " of K-key: " + key +
+                        " using converter: " + converter + ". The value will be discarded.";
 
-            LOG.warn(message, e);
+                LOG.warn(message, e);
+            }
+
             throw new ValueConversionException(valueString, key, converter, e);
         }
+    }
+
+    protected boolean isInvalidKKeyLoggingEnabled(KKey kKey) {
+        if (suppressInvalidKKeyLogging) {
+            return false;
+        }
+
+        return suppressInvalidKKeyLoggingFor == null || !suppressInvalidKKeyLoggingFor.contains(kKey);
     }
 
     @RequiredArgsConstructor

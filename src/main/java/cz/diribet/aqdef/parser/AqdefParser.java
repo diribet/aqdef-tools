@@ -1,6 +1,7 @@
 package cz.diribet.aqdef.parser;
 
 import cz.diribet.aqdef.AqdefConstants;
+import cz.diribet.aqdef.KKey;
 import cz.diribet.aqdef.model.AqdefObjectModel;
 import cz.diribet.aqdef.parser.line.AbstractLineParser;
 import cz.diribet.aqdef.parser.line.BinaryLineParser;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.util.Set;
 
 /**
  * Parses {@link AqdefObjectModel} from a AQDEF content (file or other data source)
@@ -99,6 +101,22 @@ public class AqdefParser implements AqdefConstants {
 		}
 
 		return inputStream;
+	}
+
+	/**
+	 * Set to true if the invalid K-key logging should be suppressed for all K-keys.
+	 */
+	public void setSuppressInvalidKKeyLogging(boolean suppressInvalidKKeyLogging) {
+		kKeyLineParser.setSuppressInvalidKKeyLogging(suppressInvalidKKeyLogging);
+		binaryLineParser.setSuppressInvalidKKeyLogging(suppressInvalidKKeyLogging);
+	}
+
+	/**
+	 * Set K-keys for which the invalid K-key logging should be suppressed.
+	 */
+	public void setSuppressInvalidKKeyLoggingFor(Set<KKey> suppressInvalidKKeyLoggingFor) {
+		kKeyLineParser.setSuppressInvalidKKeyLoggingFor(suppressInvalidKKeyLoggingFor);
+		binaryLineParser.setSuppressInvalidKKeyLoggingFor(suppressInvalidKKeyLoggingFor);
 	}
 
 	private static class DfqParserException extends RuntimeException {

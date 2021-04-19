@@ -118,9 +118,11 @@ public class KKeyLineParser extends AbstractLineParser {
             aqdefObjectModel.putHierarchyEntry(kKey, index, value);
 
         } else {
-            LOG.warn("{} Unknown level of k-key {}. Key will be ignored! ",
-                     ParserContext.lineLogContext(parserContext),
-                     kKey);
+            if (isInvalidKKeyLoggingEnabled(kKey)) {
+                LOG.warn("{} Unknown level of k-key {}. Key will be ignored! ",
+                         ParserContext.lineLogContext(parserContext),
+                         kKey);
+            }
         }
     }
 
