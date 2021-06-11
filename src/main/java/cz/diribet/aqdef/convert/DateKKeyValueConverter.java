@@ -1,12 +1,13 @@
 package cz.diribet.aqdef.convert;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author Vlastimil Dolejs
@@ -60,7 +61,10 @@ public class DateKKeyValueConverter implements IKKeyValueConverter<Date> {
 		newDateFormat("yy-M-d.H:m:s"),
 		newDateFormat("yy-M-d.H:m"),
 		newDateFormat("yyyy-M-d.H:m:s"),
-		newDateFormat("yyyy-M-d.H:m")
+		newDateFormat("yyyy-M-d.H:m"),
+
+		DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+		DateTimeFormatter.ISO_OFFSET_DATE_TIME
 	);
 
 	private static DateTimeFormatter newDateFormat(String pattern) {
@@ -74,6 +78,14 @@ public class DateKKeyValueConverter implements IKKeyValueConverter<Date> {
 		}
 
 		for (DateTimeFormatter inputFormat : INPUT_FORMATTERS) {
+			// Offset date time
+			try {
+				OffsetDateTime dateTime = OffsetDateTime.parse(value, inputFormat);
+				return Date.from(dateTime.toInstant());
+
+			} catch (Throwable ignored) {}
+
+			// Local date time
 			try {
 				LocalDateTime dateTime = LocalDateTime.parse(value, inputFormat);
 				return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());

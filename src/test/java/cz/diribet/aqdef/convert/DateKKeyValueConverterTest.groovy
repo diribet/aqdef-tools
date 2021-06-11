@@ -5,7 +5,9 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 
 class DateKKeyValueConverterTest extends Specification {
 
@@ -100,6 +102,12 @@ class DateKKeyValueConverterTest extends Specification {
 			"18-5-9.10:05:59"			|| expectedDateWithSeconds
 			"18-5-9.10:05"				|| expectedDateWithoutSeconds
 			"2018-5-9.10:05:59"			|| expectedDateWithSeconds
+
+			// ISO 8601 (with local date time support)
+			"2018-05-09T10:05:59"		|| expectedDateWithSeconds
+			"2018-05-09T10:05"			|| expectedDateWithoutSeconds
+			"2018-05-09T10:05:59+02:00"	|| toOffsetDate(expectedDateWithSeconds, "+02:00")
+			"2018-05-09T10:05:59-01:00"	|| toOffsetDate(expectedDateWithSeconds, "-01:00")
 	}
 
 	@Unroll
@@ -139,6 +147,11 @@ class DateKKeyValueConverterTest extends Specification {
 	Date createDate(int day, int month, int year, int hour, int minutes, int seconds) {
 		def localDateTime = LocalDateTime.of(year, month, day, hour, minutes, seconds)
 		return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant())
+	}
+
+	Date toOffsetDate(Date date, String offset) {
+		def localDateTime = LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault())
+		return Date.from(OffsetDateTime.of(localDateTime, ZoneOffset.of(offset)).toInstant())
 	}
 
 }
