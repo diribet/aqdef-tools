@@ -49,7 +49,7 @@ public final class KKey implements Serializable, Comparable<KKey> {
 		GROUP, HIERARCHY, SIMPLE_HIERARCHY, CATALOG, UNKNOWN
 	}
 
-	private static final LoadingCache<String, KKey> CACHE = CacheBuilder.newBuilder().weakValues().build(new CacheLoader<String, KKey>() {
+	private static final LoadingCache<String, KKey> CACHE = CacheBuilder.newBuilder().weakValues().build(new CacheLoader<>() {
 
 		@Override
 		public KKey load(String key) throws Exception {
@@ -319,6 +319,13 @@ public final class KKey implements Serializable, Comparable<KKey> {
 	 */
 	public boolean isSimpleHierarchyLevel() {
 		return getLevel() == Level.SIMPLE_HIERARCHY;
+	}
+
+	/**
+	 * @return whether this key represents information about catalog record
+	 */
+	public boolean isCatalogLevel() {
+		return getLevel() == Level.CATALOG;
 	}
 
 	/**

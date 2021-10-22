@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import cz.diribet.aqdef.KKey;
 import cz.diribet.aqdef.model.AqdefObjectModel;
+import cz.diribet.aqdef.model.CatalogRecordIndex;
 import cz.diribet.aqdef.model.CharacteristicIndex;
 import cz.diribet.aqdef.model.GroupIndex;
 import cz.diribet.aqdef.model.PartIndex;
@@ -55,6 +56,7 @@ public class AqdefObjectModelBuilder {
 	private final AtomicInteger characteristicIndex = new AtomicInteger(1);
 	private final AtomicInteger valueIndex = new AtomicInteger(1);
 	private final AtomicInteger groupIndex = new AtomicInteger(1);
+	private final AtomicInteger catalogRecordIndex = new AtomicInteger(1);
 
 	private final AtomicInteger hierarchyNodeIndex = new AtomicInteger(1);
 
@@ -214,6 +216,18 @@ public class AqdefObjectModelBuilder {
 												parentCharacteristicId);
 	}
 
+	public void createCatalogRecordEntry(String key, Object value) {
+		createCatalogRecordEntry(KKey.of(key), value);
+	}
+
+	public void createCatalogRecordEntry(KKey key, Object value) {
+		if (value == null) {
+			return;
+		}
+
+		aqdefObjectModel.putCatalogRecordEntry(key, currentCatalogRecordIndex(), value);
+	}
+
 	/**
 	 * You have to call this method after all data of current part (and its characteristics and values) are written.
 	 */
@@ -243,6 +257,13 @@ public class AqdefObjectModelBuilder {
 		groupIndex.incrementAndGet();
 	}
 
+	/**
+	 * You have to call this method after all data of the current catalog record are written.
+	 */
+	public void nextCatalogRecord() {
+		catalogRecordIndex.incrementAndGet();
+	}
+
 	private PartIndex currentPartIndex() {
 		return PartIndex.of(partIndex.get());
 	}
@@ -257,6 +278,10 @@ public class AqdefObjectModelBuilder {
 
 	private ValueIndex currentValueIndex() {
 		return ValueIndex.of(currentCharacteristicIndex(), valueIndex.get());
+	}
+
+	private CatalogRecordIndex currentCatalogRecordIndex() {
+		return CatalogRecordIndex.of(catalogRecordIndex.get());
 	}
 
 }

@@ -57,10 +57,12 @@ public class AqdefObjectModel {
 	// Attributes
 	//*******************************************
 
-	private Map<PartIndex, PartEntries> partEntries = newEntriesMap();
-	private Map<PartIndex, Map<CharacteristicIndex, CharacteristicEntries>> characteristicEntries = newEntriesMap();
-	private Map<PartIndex, Map<GroupIndex, GroupEntries>> groupEntries = newEntriesMap();
-	private Map<PartIndex, Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>>> valueEntries = newEntriesMap();
+	private final Map<PartIndex, PartEntries> partEntries = newEntriesMap();
+	private final Map<PartIndex, Map<CharacteristicIndex, CharacteristicEntries>> characteristicEntries = newEntriesMap();
+	private final Map<PartIndex, Map<GroupIndex, GroupEntries>> groupEntries = newEntriesMap();
+	private final Map<PartIndex, Map<CharacteristicIndex, Map<ValueIndex, ValueEntries>>> valueEntries = newEntriesMap();
+
+	private final Map<CatalogRecordIndex, CatalogRecordEntries> catalogEntries = newEntriesMap();
 
 	@Getter
 	@Setter
@@ -92,6 +94,30 @@ public class AqdefObjectModel {
 	 */
 	private PartEntries removePartEntries(PartIndex index) {
 		return partEntries.remove(index);
+	}
+
+	public void putCatalogRecordEntry(KKey key, CatalogRecordIndex index, Object value) {
+		if (value == null) {
+			return;
+		}
+
+		CatalogRecordEntries entriesWithIndex = catalogEntries.computeIfAbsent(index, CatalogRecordEntries::new);
+		entriesWithIndex.put(key, value);
+	}
+
+	public void putCatalogRecordEntries(CatalogRecordEntries newCatalogRecordEntries) {
+		CatalogRecordEntries entriesWithIndex =
+				catalogEntries.computeIfAbsent(newCatalogRecordEntries.getIndex(), CatalogRecordEntries::new);
+		entriesWithIndex.putAll(newCatalogRecordEntries, true);
+	}
+
+	/**
+	 * Removes catalog record entries with the given index.
+	 *
+	 * @param index
+	 */
+	private CatalogRecordEntries removeCatalogRecordEntries(CatalogRecordIndex index) {
+		return catalogEntries.remove(index);
 	}
 
 	public void putCharacteristicEntry(KKey key, CharacteristicIndex characteristicIndex, Object value) {
@@ -237,6 +263,30 @@ public class AqdefObjectModel {
 	 */
 	public List<PartEntries> getParts() {
 		return new ArrayList<>(partEntries.values());
+	}
+
+	/**
+	 * Returns indexes of all catalog records in this object model.
+	 *
+	 * @return
+	 */
+	public List<CatalogRecordIndex> getCatalogRecordIndexes() {
+		return new ArrayList<>(catalogEntries.keySet());
+	}
+
+	public CatalogRecordEntries getCatalogRecordEntries(int index) {
+		return getCatalogRecordEntries(CatalogRecordIndex.of(index));
+	}
+
+	public CatalogRecordEntries getCatalogRecordEntries(CatalogRecordIndex index) {
+		return catalogEntries.get(index);
+	}
+
+	/**
+	 * @return all catalog records in this object model
+	 */
+	public List<CatalogRecordEntries> getCatalogRecords() {
+		return new ArrayList<>(catalogEntries.values());
 	}
 
 	/**
@@ -571,6 +621,17 @@ public class AqdefObjectModel {
 	}
 
 	/**
+	 * Iterates through all catalog records
+	 *
+	 * @param consumer
+	 */
+	public void forEachCatalogRecord(CatalogRecordConsumer consumer) {
+		catalogEntries.forEach((catalogRecordIndex, catalogRecord) -> {
+			consumer.accept(catalogRecord);
+		});
+	}
+
+	/**
 	 * Iterates through all characteristics of all parts
 	 *
 	 * @param consumer
@@ -758,6 +819,24 @@ public class AqdefObjectModel {
 				// remove characteristics and values for that part
 				characteristicEntries.remove(partIndex);
 				valueEntries.remove(partIndex);
+			}
+		}
+	}
+
+	/**
+	 * Removes all catalog records that do not match the given predicate.
+	 *
+	 * @param predicate
+	 */
+	public void filterCatalogRecords(CatalogRecordPredicate predicate) {
+		Iterator<Map.Entry<CatalogRecordIndex, CatalogRecordEntries>> iterator = catalogEntries.entrySet().iterator();
+		while (iterator.hasNext()) {
+
+			Entry<CatalogRecordIndex, CatalogRecordEntries> entry = iterator.next();
+			CatalogRecordEntries catalogRecord = entry.getValue();
+
+			if (!predicate.test(catalogRecord)) {
+				iterator.remove();
 			}
 		}
 	}
@@ -1160,6 +1239,11 @@ public class AqdefObjectModel {
 	}
 
 	@FunctionalInterface
+	public interface CatalogRecordConsumer {
+		void accept(CatalogRecordEntries catalogRecord);
+	}
+
+	@FunctionalInterface
 	public interface CharacteristicConsumer {
 		void accept(PartEntries part, CharacteristicEntries characteristic);
 	}
@@ -1197,6 +1281,11 @@ public class AqdefObjectModel {
 	@FunctionalInterface
 	public interface PartPredicate {
 		boolean test(PartEntries part);
+	}
+
+	@FunctionalInterface
+	public interface CatalogRecordPredicate {
+		boolean test(CatalogRecordEntries catalogRecord);
 	}
 
 	@FunctionalInterface
@@ -1334,6 +1423,31 @@ public class AqdefObjectModel {
 
 	}
 
+	public static class CatalogRecordEntries extends Entries<CatalogRecordEntry, CatalogRecordIndex> {
+
+		public CatalogRecordEntries(CatalogRecordIndex index) {
+			super(index);
+		}
+
+		@Override
+		public CatalogRecordEntries withIndex(CatalogRecordIndex index) {
+			CatalogRecordEntries copy = new CatalogRecordEntries(index);
+
+			List<CatalogRecordEntry> entriesCopy =
+					values().stream()
+							.map(e -> new CatalogRecordEntry(e.getKey(), index, e.getValue()))
+							.collect(toList());
+			copy.putAll(entriesCopy, true);
+			return copy;
+		}
+
+		@Override
+		protected CatalogRecordEntry newEntry(KKey key, CatalogRecordIndex index, Object value) {
+			return new CatalogRecordEntry(key, index, value);
+		}
+
+	}
+
 	@Data
 	@EqualsAndHashCode(callSuper = true)
 	public static abstract class Entries<E extends AbstractEntry<I>, I> extends HashMap<KKey, E> implements IHasKKeyValues {
@@ -1395,7 +1509,6 @@ public class AqdefObjectModel {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
 		public <T> T getValue(KKey key) {
 			E entry = get(key);
 
@@ -1505,6 +1618,20 @@ public class AqdefObjectModel {
 		private static KKey validateKey(KKey key) {
 			if (!key.isGroupLevel()) {
 				throw new IllegalArgumentException("K-Key of group type expected, but found: " + key);
+			}
+			return key;
+		}
+	}
+
+	public static class CatalogRecordEntry extends AbstractEntry<CatalogRecordIndex> {
+
+		public CatalogRecordEntry(KKey key, CatalogRecordIndex index, Object value) {
+			super(validateKey(key), index, value);
+		}
+
+		private static KKey validateKey(KKey key) {
+			if (!key.isCatalogLevel()) {
+				throw new IllegalArgumentException("K-Key of catalog type expected, but found: " + key);
 			}
 			return key;
 		}
