@@ -2,6 +2,7 @@ package cz.diribet.aqdef.model;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,10 +12,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -459,23 +462,40 @@ public class AqdefHierarchy {
 	private List<Object> getChildIndexes(NodeIndex nodeIndex, PartIndex partIndex) {
 		List<HierarchyEntry> children = nodeBindings.getOrDefault(nodeIndex, Collections.emptyList());
 
-		return children.stream()
-					   .map(binding -> {
-						   if (binding.getKey().equals(KEY_CHARACTERISTIC_BINDING)) {
+		Set<Object> childIndexes =
+				children.stream()
+						.map(binding -> {
+							if (binding.getKey().equals(KEY_CHARACTERISTIC_BINDING)) {
 
-							   return Optional.of(CharacteristicIndex.of(partIndex, (Integer) binding.getValue()));
+								return Optional.of(CharacteristicIndex.of(partIndex, (Integer) binding.getValue()));
 
-						   } else if (binding.getKey().equals(KEY_NODE_BINDING)) {
+							} else if (binding.getKey().equals(KEY_NODE_BINDING)) {
+								NodeIndex targetNodeIndex = NodeIndex.of((Integer) binding.getValue());
+								return getCharacteristicOrGroupIndexOfNode(targetNodeIndex, partIndex);
 
-							   return getCharacteristicOrGroupIndexOfNode(binding.getIndex(), partIndex);
+							} else {
+								throw new IllegalArgumentException("Unknown node binding type: " + binding.getKey());
+							}
+						})
+						.filter(Optional::isPresent)
+						.map(Optional::get)
+						.collect(toSet());
 
-						   } else {
-							   throw new IllegalArgumentException("Unknown node binding type: " + binding.getKey());
-						   }
-					   })
-					   .filter(Optional::isPresent)
-					   .map(Optional::get)
-					   .collect(toList());
+		List<CharacteristicIndex> characteristicIndexes =
+				childIndexes.stream()
+							.filter(e -> e instanceof CharacteristicIndex)
+							.map(e -> (CharacteristicIndex) e)
+							.sorted()
+							.collect(toList());
+
+		List<GroupIndex> groupIndexes =
+				childIndexes.stream()
+							.filter(e -> e instanceof GroupIndex)
+							.map(e -> (GroupIndex) e)
+							.sorted()
+							.collect(toList());
+
+		return Stream.concat(characteristicIndexes.stream(), groupIndexes.stream()).collect(toList());
 	}
 
 	/**
