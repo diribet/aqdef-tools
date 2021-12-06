@@ -1,6 +1,6 @@
 # AQDEF tools
 
-[![Build Status](https://travis-ci.com/diribet/aqdef-tools.svg?branch=master)](https://travis-ci.com/diribet/aqdef-tools)
+[![Build Status](https://app.travis-ci.com/diribet/aqdef-tools.svg?branch=master)](https://app.travis-ci.com/diribet/aqdef-tools)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/cz.diribet/aqdef-tools/badge.svg)](https://maven-badges.herokuapp.com/maven-central/cz.diribet/aqdef-tools)
 
 AQDEF tools is a Java library that can be used for reading, writing, creating and manipulating the AQDEF content. 
