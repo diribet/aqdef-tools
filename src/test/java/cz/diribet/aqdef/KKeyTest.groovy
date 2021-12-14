@@ -1,7 +1,4 @@
-package cz.diribet.aqdef;
-
-import static org.hamcrest.Matchers.*
-import static org.junit.Assert.*
+package cz.diribet.aqdef
 
 import spock.lang.Specification
 
@@ -31,7 +28,7 @@ class KKeyTest extends Specification {
 
 		then:
 			notThrown Throwable
-			klice.size == 100000
+			klice.size() == 100000
 	}
 
 }
