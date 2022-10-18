@@ -1,43 +1,31 @@
 package cz.diribet.aqdef.writer;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.io.Writer;
-import java.util.Comparator;
-import java.util.Objects;
-
-import org.apache.commons.io.output.StringBuilderWriter;
-import org.apache.commons.lang3.StringUtils;
-
 import cz.diribet.aqdef.AqdefConstants;
 import cz.diribet.aqdef.KKey;
 import cz.diribet.aqdef.convert.IKKeyValueConverter;
 import cz.diribet.aqdef.model.AqdefHierarchy.HierarchyEntry;
 import cz.diribet.aqdef.model.AqdefObjectModel;
-import cz.diribet.aqdef.model.AqdefObjectModel.CharacteristicEntries;
-import cz.diribet.aqdef.model.AqdefObjectModel.CharacteristicEntry;
-import cz.diribet.aqdef.model.AqdefObjectModel.GroupEntries;
-import cz.diribet.aqdef.model.AqdefObjectModel.GroupEntry;
-import cz.diribet.aqdef.model.AqdefObjectModel.PartEntries;
-import cz.diribet.aqdef.model.AqdefObjectModel.PartEntry;
-import cz.diribet.aqdef.model.AqdefObjectModel.ValueEntries;
-import cz.diribet.aqdef.model.AqdefObjectModel.ValueEntry;
+import cz.diribet.aqdef.model.AqdefObjectModel.*;
+import lombok.NonNull;
+import org.apache.commons.io.output.StringBuilderWriter;
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.io.Writer;
+import java.util.Comparator;
 
 /**
  * Writes {@link AqdefObjectModel} to AQDFQ text structure.
  * <p>
- * You can call {@link #writeTo(Writer)} to write DFQ content to a given writer
- * or {@link #getData()} to get DFQ content as a String. DFQ content is created
- * lazily when one of these methods is called.
+ * You can call {@link #writeTo(AqdefObjectModel, Writer)} to write DFQ content to a given writer
+ * or {@link #writeToString(AqdefObjectModel)} to get DFQ content as a String.
  * </p>
  *
  * @author Vlastimil Dolejs
  *
  */
 public class AqdefWriter implements AqdefConstants {
-	//*******************************************
-	// Methods
-	//*******************************************
 
 	/**
 	 * Creates AQDFQ structure and returns it as a String
@@ -46,9 +34,7 @@ public class AqdefWriter implements AqdefConstants {
 	 *            model to be written, must not be {@code null}
 	 * @return AQDFQ content as a String, never {@code null}
 	 */
-	public String writeToString(AqdefObjectModel aqdefObjectModel) {
-		Objects.requireNonNull(aqdefObjectModel);
-
+	public String writeToString(@NonNull AqdefObjectModel aqdefObjectModel) {
 		StringBuilderWriter fileContent = new StringBuilderWriter();
 
 		try {
@@ -71,10 +57,7 @@ public class AqdefWriter implements AqdefConstants {
 	 * @throws IOException
 	 *             thrown when some I/O error occur
 	 */
-	public void writeTo(AqdefObjectModel aqdefObjectModel, Writer writer) throws IOException {
-		Objects.requireNonNull(aqdefObjectModel);
-		Objects.requireNonNull(writer);
-
+	public void writeTo(@NonNull AqdefObjectModel aqdefObjectModel, @NonNull Writer writer) throws IOException {
 		writeEntries(aqdefObjectModel, writer);
 	}
 
@@ -194,25 +177,17 @@ public class AqdefWriter implements AqdefConstants {
 
 	@SuppressWarnings("unchecked")
 	private String convertValueOfKKey(KKey kKey, Object value) {
-		String result;
-
 		try {
 			IKKeyValueConverter<Object> converter = (IKKeyValueConverter<Object>) kKey.getConverter();
+
 			if (converter == null) {
 				throw new IllegalArgumentException("Can't find converter for k-key " + kKey);
 			}
 
-			result = converter.toString(value);
+			return converter.toString(value);
 
 		} catch (Throwable e) {
-			throw new RuntimeException("Failed to convert value (" + Objects.toString(value) + ") of k-key " + kKey + " to string", e);
+			throw new RuntimeException("Failed to convert value (" + value + ") of k-key " + kKey + " to string", e);
 		}
-
-		if (result != null) {
-			result = result.trim();
-		}
-
-		return result;
 	}
-
 }
