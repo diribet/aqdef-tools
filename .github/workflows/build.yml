@@ -30,7 +30,8 @@ jobs:
       - name: Test
         run: mvn test -B
 
-      - uses: actions/upload-artifact@v3  # upload test results
+      - name: Upload test reports
+        uses: actions/upload-artifact@v3  # upload test results
         if: always()                      # run this step even if previous step failed
         with:
           name: test-results
