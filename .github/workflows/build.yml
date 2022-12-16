@@ -31,8 +31,8 @@ jobs:
         run: mvn test -B
 
       - name: Upload test reports
-        uses: actions/upload-artifact@v3  # upload test results
         if: always()                      # run this step even if previous step failed
+        uses: actions/upload-artifact@v3  # upload test results
         with:
           name: test-results
           path: target/surefire-reports/*.xml

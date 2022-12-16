@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout source code
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
 
       - name: Setup Java and Maven
         uses: actions/setup-java@v3
@@ -26,6 +26,6 @@ jobs:
       - name: Deploy snapshot
         run: mvn deploy -B
 
-      - if: github.ref_type == 'tag'
-        name: Deploy release
+      - name: Deploy release
+        if: github.ref_type == 'tag'
         run: mvn deploy -Drevison=${{ github.ref_name }} -Prelease -B
