@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - github-actions
   pull_request:
     branches:
-      - master
+      - github-actions
 
 jobs:
   build:
