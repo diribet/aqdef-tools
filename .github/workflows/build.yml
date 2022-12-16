@@ -3,11 +3,7 @@ name: Build
 on:
   workflow_dispatch:
   push:
-    branches:
-      - github-actions
   pull_request:
-    branches:
-      - github-actions
 
 jobs:
   build:
