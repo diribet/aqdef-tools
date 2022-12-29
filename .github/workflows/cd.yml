@@ -1,0 +1,36 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows:
+      - CI                    # runs after CI workflow
+    types:
+      - completed
+
+jobs:
+  publish:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Setup Java and Maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: temurin
+          cache: maven
+          server-id: ossrh
+          server-username: ${{ secrets.SONATYPE_USERNAME }}
+          server-password: ${{ secrets.SONATYPE_PASSWORD }}
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+
+      - name: Publish snapshot
+        run: mvn deploy -DskipTests -B
+
+      - name: Publish release
+        if: github.ref_type == 'tag'
+        run: mvn deploy -DskipTests -Drevison=${{ github.ref_name }} -Prelease -B

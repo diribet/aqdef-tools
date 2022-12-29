@@ -1,9 +1,14 @@
-name: Build
+name: CI
 
 on:
   workflow_dispatch:
+  workflow_call:
   push:
+    branches:
+      - master
   pull_request:
+    branches:
+      - master
 
 jobs:
   build:

@@ -1,9 +1,9 @@
-name: Test report
+name: Report tests
 
 on:
   workflow_run:
     workflows:
-      - Build
+      - CI                                  # runs after CI workflow
     types:
       - completed
 
