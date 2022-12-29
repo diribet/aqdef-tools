@@ -1,0 +1,29 @@
+name: Compile
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Setup Java and Maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: temurin
+          cache: maven
+
+      - name: Compile
+        run: mvn clean compile -DskipTests -B -U
+
+      - name: Test
+        run: mvn test -B
