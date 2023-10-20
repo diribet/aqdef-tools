@@ -549,7 +549,7 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K0004"), KKeyMetadata.of("WVDATZEIT", Date.class)); //Datum/Zeit (K0004)
 			keys.put(KKey.of("K0006"), KKeyMetadata.of("WVCHARGE", String.class, 14)); //Chargen-/Ident.-Nr. (K0006)
 			keys.put(KKey.of("K0053"), KKeyMetadata.of("WVAUFTRAG", String.class, 20)); //Key des Auftrags (K0053)
-			keys.put(KKey.of("K0031"), KKeyMetadata.of("WV0031", Integer.class)); //ID der Messung/Untersuchung (K0031)
+			keys.put(KKey.of("K0031"), KKeyMetadata.of("WV0031", UUID.class)); //ID der Messung/Untersuchung (K0031)
 			keys.put(KKey.of("K0034"), KKeyMetadata.of("WV0034", Integer.class)); //Messungsstatus fï¿½r SAP-ï¿½bertragung (K0034)
 			keys.put(KKey.of("K0009"), KKeyMetadata.of("WV0009", String.class, 255)); //Short Text
 			keys.put(KKey.of("K0014"), KKeyMetadata.of("WV0014", String.class, 40)); //Short Text
