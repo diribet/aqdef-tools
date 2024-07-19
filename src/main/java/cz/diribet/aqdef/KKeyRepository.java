@@ -270,6 +270,7 @@ public final class KKeyRepository {
 
 			// missings K-keys
 			keys.put(KKey.of("K1040"), KKeyMetadata.of("?K1040?", Integer.class, 5, false));
+			keys.put(KKey.of("K1998"), KKeyMetadata.of("TEKONFIG", String.class, 400));
 			keys.put(KKey.of("K2008"), KKeyMetadata.of("MEPRUEFORT", Integer.class)); // group type
 			keys.put(KKey.of("K2015"), KKeyMetadata.of("MEGLMITT", Integer.class, 3));
 			keys.put(KKey.of("K2023"), KKeyMetadata.of("METRANSART", Integer.class, 3));
@@ -300,6 +301,7 @@ public final class KKeyRepository {
 			keys.put(KKey.of("K2207"), KKeyMetadata.of("?K2207?", Integer.class, 5, false)); // Number of test intervals
 			keys.put(KKey.of("K2654"), KKeyMetadata.of("?K2654?", Integer.class, 3, false)); // VDA 5 Version
 			keys.put(KKey.of("K2997"), KKeyMetadata.of("?K2997?", String.class, 100, false)); // Characteristic GUID
+			keys.put(KKey.of("K2998"), KKeyMetadata.of("MEKONFIG", String.class, 400));
 
 			keys.put(KKey.of("K0054"), KKeyMetadata.of("WV0054", String.class, 32));
 			keys.put(KKey.of("K0055"), KKeyMetadata.of("WV0055", String.class, 32));
