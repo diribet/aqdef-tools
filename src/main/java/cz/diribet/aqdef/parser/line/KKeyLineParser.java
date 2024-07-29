@@ -22,7 +22,7 @@ public class KKeyLineParser extends AbstractLineParser {
     /**
      * These keys contain Q-DAS qs-STAT properietary internal configuration so we can safely ignore them.
      */
-    private static final String[] PROPRIETARY_QDAS_KEYS = new String[] { "K1998", "K2998", "K2999", "K5098", "K5080" };
+    private static final String[] PROPRIETARY_QDAS_KEYS = new String[] { "K2999", "K5098", "K5080" };
 
     @Override
     public boolean isLineSupported(@NonNull String line) {
