@@ -129,6 +129,19 @@
 	</dependencies>
 
     <build>
+		<testResources>
+			<testResource>
+				<directory>src/test/resources</directory>
+			</testResource>
+			<testResource>
+				<directory>src/test/java</directory>
+				<excludes>
+					<exclude>**/*.java</exclude>
+					<exclude>**/*.groovy</exclude>
+				</excludes>
+			</testResource>
+		</testResources>
+
         <plugins>
 			<!-- ======================================================================================== -->
 			<!-- Compiler that also compiles test groovy classes -->
