@@ -5,14 +5,14 @@ import java.text.SimpleDateFormat
 import cz.diribet.aqdef.model.builder.AqdefObjectModelBuilder
 import spock.lang.Specification
 
-class AqdefWriterTest_attributiveDfq extends Specification {
+class AqdefWriterAttributiveDfqTest extends Specification {
 
 	final static BASE_DATE_FOR_VALUES = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse("1.1.2013 15:18:31")
 
 	def "create DFQ with single attributive characteristic and sigle error log sheet characteristic"() {
 		given:
 			def expectedContent = getClass().getResourceAsStream("attributiveDfq_attributiveCharacteristic_and_errorLogSheet.dfq").text
-			
+
 			def builder = new AqdefObjectModelBuilder()
 
 			def partIndex = 1
@@ -46,7 +46,7 @@ class AqdefWriterTest_attributiveDfq extends Specification {
 			def objectModel = builder.build()
 
 		when:
-			def content = new AqdefWriter().writeToString(objectModel)			
+			def content = new AqdefWriter().writeToString(objectModel)
 
 		then:
 			content == expectedContent

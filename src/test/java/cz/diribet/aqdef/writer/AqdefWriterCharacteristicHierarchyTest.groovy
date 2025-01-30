@@ -6,7 +6,7 @@ import cz.diribet.aqdef.model.builder.AqdefObjectModelBuilder
 import spock.lang.Ignore
 import spock.lang.Specification
 
-class AqdefWriterTest_characteristicHierarchy extends Specification {
+class AqdefWriterCharacteristicHierarchyTest extends Specification {
 	final static BASE_DATE_FOR_VALUES = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss").parse("1.1.2013 15:18:31")
 
 	def createDfqObjectModel(partTemplates) {
