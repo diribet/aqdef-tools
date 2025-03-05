@@ -1,17 +1,16 @@
 package cz.diribet.aqdef;
 
-import java.io.Serializable;
-import java.util.concurrent.ExecutionException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import cz.diribet.aqdef.catalog.CatalogField;
 import cz.diribet.aqdef.convert.IKKeyValueConverter;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.Serializable;
+import java.util.concurrent.ExecutionException;
 
 /**
  * K-key (also referred to as 'Key field' / 'K field' in the documentation of AQDEF format)
@@ -36,17 +35,14 @@ import cz.diribet.aqdef.convert.IKKeyValueConverter;
  * @author Vlastimil Dolejs
  *
  */
+@Slf4j
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public final class KKey implements Serializable, Comparable<KKey> {
-	//*******************************************
-	// Attributes
-	//*******************************************
-
-	private static final Logger LOG = LoggerFactory.getLogger(KKey.class);
 
 	public enum Level {
 		PART, CHARACTERISTIC, VALUE,
 		CUSTOM_PART, CUSTOM_CHARACTERISTIC, CUSTOM_VALUE,
-		GROUP, HIERARCHY, SIMPLE_HIERARCHY, CATALOG, UNKNOWN
+		GROUP, HIERARCHY, SIMPLE_HIERARCHY, CATALOG, CUSTOM_CATALOG, UNKNOWN
 	}
 
 	private static final LoadingCache<String, KKey> CACHE = CacheBuilder.newBuilder().weakValues().build(new CacheLoader<>() {
@@ -57,14 +53,12 @@ public final class KKey implements Serializable, Comparable<KKey> {
 		}
 	});
 
-	private String key;
+	@Getter
+	@EqualsAndHashCode.Include
+	private final String key;
 
 	private transient Level level;
 	private transient KKeyMetadata metadata;
-
-	//*******************************************
-	// Constructors
-	//*******************************************
 
 	private KKey(String key) {
 		this.key = key;
@@ -85,14 +79,6 @@ public final class KKey implements Serializable, Comparable<KKey> {
 		}
 	}
 
-	//*******************************************
-	// Methods
-	//*******************************************
-
-	public String getKey() {
-		return key;
-	}
-
 	/**
 	 * See {@link KKeyMetadata#getConverter()}
 	 *
@@ -104,7 +90,7 @@ public final class KKey implements Serializable, Comparable<KKey> {
 		}
 
 		if (metadata == null || metadata.getConverter() == null) {
-			LOG.error("Can't find converter for k-key: " + key);
+			log.error("Can't find converter for k-key: {}", key);
 			return null;
 		} else {
 			return metadata.getConverter();
@@ -122,7 +108,7 @@ public final class KKey implements Serializable, Comparable<KKey> {
 		}
 
 		if (metadata == null || metadata.getColumnName() == null) {
-			LOG.error("Can't find DB column name for k-key: " + key);
+			log.error("Can't find DB column name for k-key: {}", key);
 			return null;
 		} else {
 			return metadata.getColumnName();
@@ -140,7 +126,7 @@ public final class KKey implements Serializable, Comparable<KKey> {
 		}
 
 		if (metadata == null || metadata.getDataType() == null) {
-			LOG.error("Can't find data type of k-key: " + key);
+			log.error("Can't find data type of k-key: {}", key);
 			return null;
 		} else {
 			return metadata.getDataType();
@@ -158,7 +144,7 @@ public final class KKey implements Serializable, Comparable<KKey> {
 		}
 
 		if (metadata == null) {
-			LOG.error("Can't find metadata of k-key: " + key);
+			log.error("Can't find metadata of k-key: {}", key);
 			return false;
 		} else {
 			return metadata.isRespectsCharacteristicDecimalSettings();
@@ -175,7 +161,7 @@ public final class KKey implements Serializable, Comparable<KKey> {
 			metadata = findMetadata();
 
 			if (metadata == null) {
-				LOG.error("Can't find metadata for k-key: " + key);
+				log.error("Can't find metadata for k-key: {}", key);
 				return null;
 			}
 		}
@@ -200,22 +186,19 @@ public final class KKey implements Serializable, Comparable<KKey> {
 		if (level == null) {
 			level = determineLevel();
 		}
-
 		return level;
 	}
 
 	private Level determineLevel() {
 		if (key == null) {
-			LOG.error("K-key with missing key.");
+			log.error("K-key with missing key");
 			return Level.UNKNOWN;
 		}
 
 		if (key.equalsIgnoreCase("K2030") || key.equalsIgnoreCase("K2031")) {
-
 			return Level.SIMPLE_HIERARCHY;
 
 		} else if (key.startsWith("K1")) {
-
 			return Level.PART;
 
 		} else if (key.startsWith("K2") // characteristic properties
@@ -224,38 +207,32 @@ public final class KKey implements Serializable, Comparable<KKey> {
 			return Level.CHARACTERISTIC;
 
 		} else if (key.startsWith("K0")) {
-
 			return Level.VALUE;
 
 		} else if (key.startsWith("K4")) {
-
 			return Level.CATALOG;
 
 		} else if (key.startsWith("K50")) {
-
 			return Level.GROUP;
 
 		} else if (key.startsWith("K51")) {
-
 			return Level.HIERARCHY;
 
 		} else if (key.startsWith("KX0")) {
-
 			return Level.CUSTOM_VALUE;
 
-		} else if (key.startsWith("KX2")) {
-
-			return Level.CUSTOM_CHARACTERISTIC;
-
 		} else if (key.startsWith("KX1")) {
-
 			return Level.CUSTOM_PART;
 
+		} else if (key.startsWith("KX2")) {
+			return Level.CUSTOM_CHARACTERISTIC;
+
+		} else if (key.startsWith("KX4")) {
+			return Level.CUSTOM_CATALOG;
+
 		} else {
-
-			LOG.error("Unknown level of k-key " + key);
+			log.error("Unknown level of k-key: {}", key);
 			return Level.UNKNOWN;
-
 		}
 	}
 	/**
@@ -329,52 +306,25 @@ public final class KKey implements Serializable, Comparable<KKey> {
 	}
 
 	/**
+	 * @return whether this key represents information about catalog record and is defined as custom
+	 */
+	public boolean isCustomCatalogLevel() {
+		return getLevel() == Level.CUSTOM_CATALOG;
+	}
+
+	/**
 	 * @return whether this key represents our custom key
 	 */
 	public boolean isCustom() {
-		return isCustomPartLevel() || isCustomCharacteristicLevel() || isCustomValueLevel();
+		return isCustomPartLevel() || isCustomCharacteristicLevel() || isCustomCatalogLevel() || isCustomValueLevel();
 	}
 
 	/**
 	 * @return whether this k-key should be written to DFQ file
 	 */
 	public boolean shouldBeWrittenToDfq() {
-		if (isCustom()) {
-			return false;
-		}
-
-		return true;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((key == null) ? 0 : key.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof KKey)) {
-			return false;
-		}
-		KKey other = (KKey) obj;
-		if (key == null) {
-			if (other.key != null) {
-				return false;
-			}
-		} else if (!key.equals(other.key)) {
-			return false;
-		}
-		return true;
-	}
+        return !isCustom();
+    }
 
 	@Override
 	public String toString() {
@@ -383,18 +333,16 @@ public final class KKey implements Serializable, Comparable<KKey> {
 
 	@Override
 	public int compareTo(KKey o) {
-		if (key == null && o.key == null) {
-			return 0;
-		}
-		if (key == null && o.key != null) {
-			return 1;
-		}
-		if (key != null && o.key == null) {
+		if (key == null) {
+			return o.key == null ? 0 : 1;
+
+		} else if (o.key == null) {
 			return -1;
 		}
 
 		String thisKey = keyForCompare(key);
 		String otherKey = keyForCompare(o.key);
+
 		return thisKey.compareTo(otherKey);
 	}
 
@@ -410,5 +358,4 @@ public final class KKey implements Serializable, Comparable<KKey> {
 
 		return key;
 	}
-
 }
