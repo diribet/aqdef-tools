@@ -250,6 +250,13 @@ public final class KKey implements Serializable, Comparable<KKey> {
 	}
 
 	/**
+	 * @return whether this key represents information for part (dil / teil) regardless whether it is custom or not
+	 */
+	public boolean isAnyPartLevel() {
+		return isPartLevel() || isCustomPartLevel();
+	}
+
+	/**
 	 * @return whether this key represents information for characterstic (znak / merkmal)
 	 */
 	public boolean isCharacteristicLevel() {
@@ -264,6 +271,13 @@ public final class KKey implements Serializable, Comparable<KKey> {
 	}
 
 	/**
+	 * @return whether this key represents information for characterstic (znak / merkmal) regardless whether it is custom or not
+	 */
+	public boolean isAnyCharacteristicLevel() {
+		return isCharacteristicLevel() || isCustomCharacteristicLevel();
+	}
+
+	/**
 	 * @return whether this key represents information for value (hodnota / wertevar)
 	 */
 	public boolean isValueLevel() {
@@ -275,6 +289,13 @@ public final class KKey implements Serializable, Comparable<KKey> {
 	 */
 	public boolean isCustomValueLevel() {
 		return getLevel() == Level.CUSTOM_VALUE;
+	}
+
+	/**
+	 * @return whether this key represents information for value (hodnota / wertevar) regardless whether it is custom or not
+	 */
+	public boolean isAnyValueLevel() {
+		return isValueLevel() || isCustomValueLevel();
 	}
 
 	/**
@@ -310,6 +331,13 @@ public final class KKey implements Serializable, Comparable<KKey> {
 	 */
 	public boolean isCustomCatalogLevel() {
 		return getLevel() == Level.CUSTOM_CATALOG;
+	}
+
+	/**
+	 * @return whether this key represents information about catalog record regardless whether it is custom or not
+	 */
+	public boolean isAnyCatalogLevel() {
+		return isCatalogLevel() || isCustomCatalogLevel();
 	}
 
 	/**
