@@ -85,7 +85,7 @@ class AqdefWriterCharacteristicHierarchyTest extends Specification {
 														[characteristicIndex: 2, numberOfValues: 1, hierarchyType: 0, parentCharacteristic: 1],
 														[characteristicIndex: 3, numberOfValues: 1, hierarchyType: 0, parentCharacteristic: 1]
 													]
-												]]);
+												]])
 
 			def content = new AqdefWriter().writeToString(objectModel)
 			def expectedContent = getClass().getResourceAsStream("characteristicHierarchy_singlePart_singleGroup_twoCharacteristics.dfq").text
@@ -106,10 +106,36 @@ class AqdefWriterCharacteristicHierarchyTest extends Specification {
 														[characteristicIndex: 5, numberOfValues: 0, hierarchyType: 10, parentCharacteristic: 0],
 														[characteristicIndex: 6, numberOfValues: 1, hierarchyType: 0, parentCharacteristic: 5]
 													]
-												]]);
+												]])
 
 			def content = new AqdefWriter().writeToString(objectModel)
 			def expectedContent = getClass().getResourceAsStream("characteristicHierarchy_singlePart_twoChildCharacteristics_twoGroups.dfq").text
+
+		then:
+			content == expectedContent
+	}
+
+	def "create DFQ for two parts, each with single group and 2 child characteristics"() {
+		when:
+			def objectModel = createDfqObjectModel([[
+				                                        partIndex: 1,
+				                                        characteristics:[
+					                                        [characteristicIndex: 1, numberOfValues: 0, hierarchyType: 10, parentCharacteristic: 0],
+					                                        [characteristicIndex: 2, numberOfValues: 1, hierarchyType: 0, parentCharacteristic: 1],
+					                                        [characteristicIndex: 3, numberOfValues: 1, hierarchyType: 0, parentCharacteristic: 1]
+				                                        ]
+			                                        ],[
+				                                        partIndex: 2,
+				                                        characteristics:[
+					                                        [characteristicIndex: 4, numberOfValues: 0, hierarchyType: 10, parentCharacteristic: 0],
+					                                        [characteristicIndex: 5, numberOfValues: 0, hierarchyType: 12, parentCharacteristic: 4],
+					                                        [characteristicIndex: 6, numberOfValues: 1, hierarchyType: 0, parentCharacteristic: 5],
+					                                        [characteristicIndex: 7, numberOfValues: 1, hierarchyType: 0, parentCharacteristic: 5]
+				                                        ]
+			                                        ]])
+
+			def content = new AqdefWriter().writeToString(objectModel)
+			def expectedContent = getClass().getResourceAsStream("characteristicHierarchy_twoParts_singleGroup_twoCharacteristics.dfq").text
 
 		then:
 			content == expectedContent
@@ -131,7 +157,7 @@ class AqdefWriterCharacteristicHierarchyTest extends Specification {
 														[characteristicIndex: 7, numberOfValues: 0, characteristicType: 0, hierarchyType: 10, parentCharacteristic: 0],
 														[characteristicIndex: 8, numberOfValues: 0, characteristicType: 0, hierarchyType: 0, parentCharacteristic: 7]
 													]
-												]]);
+												]])
 
 			def content = new AqdefWriter().writeToString(objectModel)
 			def expectedContent = getClass().getResourceAsStream("characteristicHierarchy_characteristicOrder.dfq").text
