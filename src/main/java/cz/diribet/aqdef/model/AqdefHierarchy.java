@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -413,6 +414,17 @@ public class AqdefHierarchy {
 
 	public void forEachNodeBinding(Consumer<HierarchyEntry> action) {
 		nodeBindings.values().stream().flatMap(List::stream).forEach(action);
+	}
+
+	public Collection<HierarchyEntry> getNodeDefinitions() {
+		return nodeDefinitions.values();
+	}
+
+	public Collection<HierarchyEntry> getNodeBindings() {
+		return nodeBindings.values()
+						   .stream()
+						   .flatMap(List::stream)
+						   .collect(Collectors.toList());
 	}
 
 	public boolean isEmpty() {

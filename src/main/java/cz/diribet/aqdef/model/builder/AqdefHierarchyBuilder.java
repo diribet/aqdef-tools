@@ -26,7 +26,7 @@ import cz.diribet.aqdef.model.PartIndex;
  * @author Vlastimil Dolejs
  *
  */
-class AqdefHierarchyBuilder implements AqdefConstants {
+public class AqdefHierarchyBuilder implements AqdefConstants {
 	//*******************************************
 	// Attributes
 	//*******************************************
