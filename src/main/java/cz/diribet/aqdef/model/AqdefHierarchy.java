@@ -416,11 +416,21 @@ public class AqdefHierarchy {
 		nodeBindings.values().stream().flatMap(List::stream).forEach(action);
 	}
 
-	public Collection<HierarchyEntry> getNodeDefinitions() {
+	/**
+	 * Returns flat view of all node definitions.
+	 *
+	 * @return
+	 */
+	public Collection<HierarchyEntry> getNodeDefinitionEntries() {
 		return nodeDefinitions.values();
 	}
 
-	public Collection<HierarchyEntry> getNodeBindings() {
+	/**
+	 * Returns flat view of all node bindings.
+	 *
+	 * @return
+	 */
+	public Collection<HierarchyEntry> getNodeBindingEntries() {
 		return nodeBindings.values()
 						   .stream()
 						   .flatMap(List::stream)
