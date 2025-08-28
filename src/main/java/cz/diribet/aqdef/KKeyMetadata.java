@@ -2,6 +2,7 @@ package cz.diribet.aqdef;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.UUID;
@@ -22,7 +23,7 @@ import cz.diribet.aqdef.convert.StringKKeyValueConverter;
  * @author Vlastimil Dolejs
  *
  */
-public final class KKeyMetadata {
+public final class KKeyMetadata implements Serializable {
 
 	private final String columnName;
 	private final Class<?> dataType;
