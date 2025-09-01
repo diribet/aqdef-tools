@@ -1,28 +1,22 @@
 package cz.diribet.aqdef.catalog;
 
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
+import cz.diribet.aqdef.KKey;
+import cz.diribet.aqdef.KKeyMetadata;
+import lombok.Getter;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-import cz.diribet.aqdef.KKey;
-import cz.diribet.aqdef.KKeyMetadata;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+
+import static java.util.stream.Collectors.*;
 
 /**
  * @author Vlastimil Dolejs
  * @see Catalog
  */
+@Getter
 public enum CatalogField {
 
 	K4020(Catalog.SUPPLIER, KKey.of("K4020_ID"), KKeyMetadata.of("LILFDNR", Integer.class), CatalogFieldType.ID),
@@ -35,7 +29,7 @@ public enum CatalogField {
 	K4028(Catalog.SUPPLIER, KKey.of("K4028"), KKeyMetadata.of("LIORT", String.class, 50)),
 	K4029(Catalog.SUPPLIER, KKey.of("K4029"), KKeyMetadata.of("LILAND", String.class, 50)),
 	K4521(Catalog.SUPPLIER, KKey.of("K4521"), KKeyMetadata.of("LISTATE", Integer.class), CatalogFieldType.STATE),
-	K4522(Catalog.SUPPLIER, KKey.of("K4522"), KKeyMetadata.of("LIMEMO", String.class, 255)),
+	K4522(Catalog.SUPPLIER, KKey.of("K4522"), KKeyMetadata.of("LIMEMO", String.class, 200)),
 
 	K4000(Catalog.CUSTOMER, KKey.of("K4000_ID"), KKeyMetadata.of("KULFDNR", Integer.class), CatalogFieldType.ID),
 	K4002(Catalog.CUSTOMER, KKey.of("K4002"), KKeyMetadata.of("KUNR", String.class, 20)),
@@ -47,7 +41,7 @@ public enum CatalogField {
 	K4008(Catalog.CUSTOMER, KKey.of("K4008"), KKeyMetadata.of("KUORT", String.class, 50)),
 	K4009(Catalog.CUSTOMER, KKey.of("K4009"), KKeyMetadata.of("KULAND", String.class, 50)),
 	K4501(Catalog.CUSTOMER, KKey.of("K4501"), KKeyMetadata.of("KUSTATE", Integer.class), CatalogFieldType.STATE),
-	K4502(Catalog.CUSTOMER, KKey.of("K4502"), KKeyMetadata.of("KUMEMO", String.class, 255)),
+	K4502(Catalog.CUSTOMER, KKey.of("K4502"), KKeyMetadata.of("KUMEMO", String.class, 200)),
 
 	K4120(Catalog.EMPLOYEE, KKey.of("K4120_ID"), KKeyMetadata.of("MIMITARB", Integer.class), CatalogFieldType.ID),
 	K4122(Catalog.EMPLOYEE, KKey.of("K4122"), KKeyMetadata.of("MINAME1", String.class, 50)),
@@ -98,7 +92,7 @@ public enum CatalogField {
 	K4017(Catalog.MANUFACTURER, KKey.of("K4017"), KKeyMetadata.of("HESTRASSE", String.class, 50)),
 	K4018(Catalog.MANUFACTURER, KKey.of("K4018"), KKeyMetadata.of("HEORT", String.class, 50)),
 	K4019(Catalog.MANUFACTURER, KKey.of("K4019"), KKeyMetadata.of("HELAND", String.class, 50)),
-	K4512(Catalog.MANUFACTURER, KKey.of("K4512"), KKeyMetadata.of("HEMEMO", String.class)),
+	K4512(Catalog.MANUFACTURER, KKey.of("K4512"), KKeyMetadata.of("HEMEMO", String.class, 200)),
 	K4511(Catalog.MANUFACTURER, KKey.of("K4511"), KKeyMetadata.of("HESTATE", Integer.class), CatalogFieldType.STATE),
 
 	K4040(Catalog.MATERIAL, KKey.of("K4040_ID"), KKeyMetadata.of("WSLFDNR", Integer.class), CatalogFieldType.ID),
@@ -144,7 +138,7 @@ public enum CatalogField {
 	K4102(Catalog.CONTRACTOR, KKey.of("K4102"), KKeyMetadata.of("AUNR", String.class, 50)),
 	K4103(Catalog.CONTRACTOR, KKey.of("K4103"), KKeyMetadata.of("AUNAME1", String.class, 100)),
 	K4601(Catalog.CONTRACTOR, KKey.of("K4601"), KKeyMetadata.of("AUGSTATE", Integer.class), CatalogFieldType.STATE),
-	K4602(Catalog.CONTRACTOR, KKey.of("K4602"), KKeyMetadata.of("AUMEMO", String.class)),
+	K4602(Catalog.CONTRACTOR, KKey.of("K4602"), KKeyMetadata.of("AUMEMO", String.class, 200)),
 
 	K4070(Catalog.GAGE, KKey.of("K4070"), KKeyMetadata.of("PMPRUEFMIT", Integer.class), CatalogFieldType.ID),
 	K4072(Catalog.GAGE, KKey.of("K4072"), KKeyMetadata.of("PMNR", String.class, 40)),
@@ -198,31 +192,15 @@ public enum CatalogField {
 	private final KKeyMetadata metadata;
 	private final CatalogFieldType type;
 
-	private CatalogField(Catalog catalog, KKey kKey, KKeyMetadata metadata) {
+	CatalogField(Catalog catalog, KKey kKey, KKeyMetadata metadata) {
 		this(catalog, kKey, metadata, CatalogFieldType.DATA);
 	}
 
-	private CatalogField(Catalog catalog, KKey kKey, KKeyMetadata metadata, CatalogFieldType type) {
+	CatalogField(Catalog catalog, KKey kKey, KKeyMetadata metadata, CatalogFieldType type) {
 		this.catalog = catalog;
 		this.kKey = kKey;
 		this.metadata = metadata;
 		this.type = type;
-	}
-
-	public Catalog getCatalog() {
-		return catalog;
-	}
-
-	public KKey getKKey() {
-		return kKey;
-	}
-
-	public KKeyMetadata getMetadata() {
-		return metadata;
-	}
-
-	public CatalogFieldType getType() {
-		return type;
 	}
 
 	/**
@@ -301,6 +279,7 @@ public enum CatalogField {
 	}
 
 	public enum CatalogFieldType {
+
 		/**
 		 * Identifier of catalog (surrogate key)
 		 */
